@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--
+	The goal of this web page is to show an example html page which will get queue statistics and change the font and text for supervisor alerts
+-->
+
+<head>
+	<title>Statistics2x1</title>
+	<script type="application/javascript" src="common.js"></script>
+	<script type="application/javascript" src="statistics.js"></script>
+	<script type="application/javascript" src="alerts.js"></script>
+	<!-- We'll use bootstrap here, because the rest of the internet does too -->
+	<!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet"/> -->
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+	<style>
+		.wrapper {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-gap: 1em;
+			grid-auto-rows: minmax(100px, auto);
+		}
+
+		table.table {
+			/* border-collapse: collapse; */
+			border: 1px solid red;
+
+		}
+
+		table.table tr:nth-child(even) {
+			background-color: azure;
+		}
+
+
+		table td {
+			border: 1px white solid;
+			padding: 1px;
+		}
+
+		table td label {
+			/* background-color: blueviolet; */
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 1em;
+		}
+
+		.wrapper>div {
+			background: rgb(163, 235, 235);
+			padding: 1em;
+		}
+
+		.wrapper>div:nth-child(odd) {
+			background: rgb(220, 235, 167);
+
+		}
+
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="wrapper">
+		<div>
+			<h5>Workgroup:</h5>
+			<select class="u-full-width" id='workgroupSelect' onchange="selectChanged();">
+				<option>--None--</option>
+			</select>
+
+			<thead>
+				<h3>Agent Stats</h3>
+			</thead>
+			<table class="u-full-width table table-condensed table-hover">
+				<tr>
+					<td>
+						Agents Logged In
+					</td>
+					<td>
+						<label id="inin.workgroup:AgentsLoggedInAndActivated"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Not Available
+					</td>
+					<td>
+						<label id="inin.workgroup:NotAvailable"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Available for ACD Interactions
+					</td>
+					<td>
+						<label id="inin.workgroup:NumberAvailableForACDInteractions"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Percent Available
+					</td>
+					<td>
+						<label id="inin.workgroup:PercentAvailable"></label>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div>
+			<h5>Interval:</h5>
+
+			<select class="u-full-width" id='intervalSelect' onchange="selectChanged();">
+
+			</select>
+	
+			<h3>Queue Stats</h3>
+			<table class="u-full-width table table-condensed table-hover">
+				<tr>
+					<td>
+						Average Hold Time
+					</td>
+					<td>
+						<label id="inin.workgroup:AverageHoldTime"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Average Talk Time
+					</td>
+					<td>
+						<label id="inin.workgroup:AverageTalkTime"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Average Wait Time
+					</td>
+					<td>
+						<label id="inin.workgroup:AverageWaitTime"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Abandoned
+					</td>
+					<td>
+						<label id="inin.workgroup:InteractionsAbandoned"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Answered
+					</td>
+					<td>
+						<label id="inin.workgroup:InteractionsAnswered"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Completed
+					</td>
+					<td>
+						<label id="inin.workgroup:InteractionsCompleted"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Connected
+					</td>
+					<td>
+						<label id="inin.workgroup:InteractionsConnected"></label>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<script>
+		window.onload(onLoad());
+
+	</script>
+
+</body>

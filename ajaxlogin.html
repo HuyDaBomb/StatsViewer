@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+   Author Name: Huy Phan
+   Assignment : Lab 7
+   Due Date   : 5/13/2018
+-->
+
+<head>
+    <meta charset="utf-8" />
+    <title>AJAX Login</title>
+
+    <link href="login.css" rel="stylesheet" />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css"> -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+
+</head>
+
+<body>
+
+    <div id="login">
+
+        <p id="open">LOGIN HERE</p>
+
+        <form>
+            <fieldset>
+                <!-- <legend>Connection Credentials</legend> -->
+                <div>
+                    <label for="server">Server:</label>
+                    <input class="u-full-width" placeholder="Server or IP address" type="text" name="server" value="" required autofocus />
+                </div>
+                <div>
+                    <label for="username">Username:</label>
+                    <input class="u-full-width" placeholder="user ID" type="text" name="username" id="username">
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input class="u-full-width" type="password" name="password" id="password">
+                </div>
+                <p>
+                    <label>
+                        <input type="checkbox" name="remember" checked="true" />Remember Me</label>
+
+                    <input class="u-full-width button-primary" type="submit" name="button" id="btnConnect" value="Connect">
+
+                </p>
+
+
+
+            </fieldset>
+        </form>
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            console.log('Page is ready and loaded!');
+            //bind click event to open DIV id
+            $('#open').click(function (evt) {
+                //prevent default click links from executing    
+                evt.preventDefault();
+                //check to see if closed, if so open
+                if ($('#login form').is(':hidden')) {
+                    $('#login form').fadeIn(300);
+                    $(this).addClass('close');
+                    //update open DIV with disconnected
+                    $('#open').text("Disconnected");
+                } //end if
+                else {
+                    $('#login form').slideUp(600);
+                    $(this).removeClass('close');
+                    //update open DIV with connected status
+                    $('#open').text("Connected");
+                } //end else
+            }); // end click
+
+            //var btn1 = document.getElementById('btn_getStats');
+            //btn1.addEventListener('click', onLoad);
+
+            var btnConnect1 = document.getElementById('btnConnect');
+            console.log('here clicked');
+            console.log(btnConnect1);
+            btnConnect1.addEventListener('click', function (evt) {
+                //evt.preventDefault();
+                console.log('clicked');
+                Init();
+
+            });
+
+        }); //end doc ready on load
+
+
+
+        function Init() {
+            var url = 'http://ideajam.net/ideajam/p/ij.nsf/jsonGetRecentComments';
+
+            $.ajax({
+                url: url,
+                type: 'GET', //default GET (Other values: POST)
+                dataType: 'json', //(Other values: xml, json, script, or html)
+                //data: {'param1': 'value1'}
+            }) //end ajax init
+                .done(function (data) {
+                    console.log(data);
+                    // $('body').html(data.result[0].comment);
+                    $('body').append('<ol id="kyle">');
+                    for (var i = 0; i < data.result.length; i++) {
+                        $('#kyle').append('<li>' + data.result[i].createdby + ' - ' + data.result[i].comment + '</li>');
+                    }
+
+                }) //end done
+                .fail(function () {
+                    console.log("error");
+                }) //end fail
+
+                .always(function () {
+                    console.log("completed");
+                });//end always
+
+        };//end Init
+
+
+
+    </script>
+
+</body>
+
+
+
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!--
+	The goal of this web page is to show an example html page which will get queue statistics and change the font and text for supervisor alerts
+-->
+
+<head>
+    <title>Statistics3x1</title>
+    <script type="application/javascript" src="common.js"></script>
+    <script type="application/javascript" src="statistics.js"></script>
+    <script type="application/javascript" src="alerts.js"></script>
+    <!-- We'll use bootstrap here, because the rest of the internet does too -->
+    <!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet"/> -->
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+    <style>
+        .wrapper {
+            display: grid;
+            /* grid-template-columns: 1fr 1fr; */
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 1em;
+            /* grid-column-gap: 1em; */
+            /* grid-column-gap: 1em; */
+            /* grid-auto-rows: minmax(100px, auto); */
+            /* justify-items: start; */
+            /* align-items: flex-start; */
+        }
+
+        .box1 {
+            grid-column: 1/3;
+            /* align-self: flex-start; */
+        }
+
+        .workgroupStats {
+            align-self: stretch;
+            justify-self: stretch;
+            grid-column: 1/2;
+            grid-row: 2;
+            border: 1px #333 solid;
+        }
+
+        .queueStats {
+            align-self: stretch;
+            justify-self: stretch;
+            grid-column: 1/2;
+            grid-row: 3;
+            border: 1px #333 solid;
+        }
+
+        table.table {
+            /* border-collapse: collapse; */
+            border: 1px solid red;
+
+        }
+
+        table.table tr:nth-child(even) {
+            background-color: azure;
+        }
+
+
+        table td {
+            border: 1px white solid;
+            padding: 1px;
+        }
+
+        table td label {
+            /* background-color: blueviolet; */
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 1em;
+        }
+
+        .wrapper>div {
+            background: rgb(163, 235, 235);
+            padding: 1em;
+        }
+
+        .wrapper>div:nth-child(odd) {
+            background: rgb(220, 235, 167);
+
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .section {
+            padding: 8rem 0 7rem;
+            text-align: center;
+        }
+
+        .section-heading,
+        .section-description {
+            margin-bottom: 1.2rem;
+        }
+
+        .section-a {
+            background-image: url('../images/section-bg.jpg');
+            background-size: cover;
+            color: #fff;
+            padding-bottom: 5rem;
+        }
+
+        .section-a .fa {
+            font-size: 40px;
+            margin-bottom: .5rem;
+            color: #beebff;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="wrapper">
+        <div class="box1">
+            <!-- <button id="btn_getStats" class="button-primary">Get Stats</button> -->
+            <a href="#" class="button button-primary" id="btn_getStats">
+                <i class="fa fa-download"></i>
+                Get Stats
+            </a>
+        </div>
+        <div class="workgroupStats">
+            <h5>
+                Workgroup Stats:</h5>
+            <select class="u-full-width" id='workgroupSelect' onchange="selectChanged();">
+                <option>--None--</option>
+            </select>
+
+
+            <table class="u-full-width table table-condensed table-hover">
+                <!-- <thead>
+                    <tr>
+                        <th>
+                            Agent Stats
+                        </th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead> -->
+                <tbody>
+                    <tr>
+                        <td>
+                            Agents Logged In
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AgentsLoggedInAndActivated"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Not Available
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:NotAvailable"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Available for ACD Interactions
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:NumberAvailableForACDInteractions"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Percent Available
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:PercentAvailable"></label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="queueStats">
+            <h5>Queue Interval Stats:</h5>
+
+            <select class="u-full-width" id='intervalSelect' onchange="selectChanged();">
+
+            </select>
+
+
+            <table class="u-full-width table table-condensed table-hover">
+                <!-- <thead>
+                    <tr>
+                        <th>
+                            Queue Stats
+                        </th>
+                        <th></th>
+                        
+                    </tr>
+                </thead> -->
+                <tbody>
+                    <tr>
+                        <td>
+                            Average Hold Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageHoldTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Average Talk Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageTalkTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Average Wait Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageWaitTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Abandoned
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsAbandoned"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Answered
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsAnswered"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Completed
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsCompleted"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Connected
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsConnected"></label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Perspiciatis, at minima non laudantium provident fugit veritatis
+            error consequuntur enim doloremque magni laborum ratione esse ullam doloribus sequi iusto explicabo sint?</div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia eaque consectetur impedit inventore illo. Illo quod
+            sint vero, culpa enim distinctio, eius, a maiores explicabo cumque aperiam quaerat doloremque mollitia?</div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia eaque consectetur impedit inventore illo. Illo quod
+            sint vero, culpa enim distinctio, eius, a maiores explicabo cumque aperiam quaerat doloremque mollitia?</div>
+        <div>Aliquip laboris id dolor eu id dolore tempor ea tempor adipisicing mollit. Pariatur id dolor anim culpa incididunt
+            cupidatat cupidatat ex reprehenderit ipsum sunt quis laboris. Anim laboris aute proident id duis consequat ullamco
+            mollit quis irure quis. Aliqua consectetur aute aliquip dolor tempor eu pariatur. Tempor voluptate voluptate
+            excepteur sint consequat commodo voluptate cupidatat cupidatat et ad.</div>
+        <!--container-->
+    </div>
+    <section class="section section-a">
+        <div class="container">
+            <div class="row">
+                <div class="one-third column">
+                    <i class="fa fa-calendar"></i>
+                    <h5>Plan Your Life</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+                <div class="one-third column">
+                    <i class="fa fa-cloud"></i>
+                    <h5>Upload To The Cloud</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+                <div class="one-third column">
+                    <i class="fa fa-users"></i>
+                    <h5>Manage Users</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <script>
+        window.onload = function () {
+            var btn1 = document.getElementById('btn_getStats');
+            //btn1.addEventListener('click', onLoad);
+
+            onLoad();
+        };
+
+    </script>
+
+</body>

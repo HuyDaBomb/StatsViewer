@@ -1,0 +1,3943 @@
+﻿<!DOCTYPE html>
+<HTML>
+
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <TITLE>Inbound QA</TITLE>
+    <meta name="IS_System_ClientStatus" />
+    <meta name="IS_Attr_CallID" />
+    <meta name="IS_Attr_Zone" />
+    <meta name="IS_Attr_DialingMode" />
+    <meta name="IS_Attr_Attempts" />
+    <meta name="IS_Attr_CampaignName" />
+    <meta name="IS_System_AgentID" />
+
+    <meta name="IS_Action_SetForeground" />
+    <meta name="IS_Action_SelectPage" />
+
+    <meta name="IS_ATTR_CampaignID" />
+    <meta name="IS_ATTR_WorkflowID" />
+
+    <meta name="is_attr_schedphone" />
+    <meta name="IS_Action_RequestBreak" />
+    <meta name="IS_Action_EndBreak" />
+    <meta name="IS_Action_Record" />
+    <meta name="IS_Action_WriteData" />
+    <meta name="IS_Action_Stage" />
+    <meta name="IS_Action_SetFocus" />
+    <meta name="IS_Action_Trace" />
+    <meta name="IS_Action_ClientStatus" />
+    <meta name="IS_Action_RequestLogoff" />
+    <meta name="IS_Action_Pickup" />
+    <meta name="IS_Action_Disconnect" />
+
+
+    <!--BankerView Styles-->
+    <link href="Content/reset.css" rel="stylesheet" />
+    <link href="Content/gen-styl.css" rel="stylesheet" />
+    <link href="Content/Site.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="scripts/globalVars.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!--<script type="text/javascript" src="scripts/functions.js"></script>
+    -->
+    <!--Old Code-->
+    <script language="javascript">
+
+//Advant Point Global Variables
+var EXT_MBTransfer = '99999';
+var NAF_ObjectID = null;
+var NAF_LoanState = null;
+var NAF_LoanZip = null;
+var NAF_Identity = null;
+var NAF_LoanType = null;
+var NAF_LoanPurpose = null;
+var NAF_LoanSource = null;
+var NAF_LeadCampaign = null;
+var NAF_DNIS = null;
+var NAF_DialerCallback = null; //yes or no
+
+var FIRSTNAME = document.getElementById('firstName')
+var LASTNAME = document.getElementById('lastName')
+var NEWLEADSTATE = document.getElementById('newLeadState')
+var HOMEPHONE = document.getElementById('PhoneHome')
+var WORKPHONE = document.getElementById('PhoneWork')
+var CELLPHONE = document.getElementById('PhoneCell')
+
+var LoadStatusAndLoadDomain = false;
+var dnisPhoneNumber = null;
+var validatorOverrider = false;
+
+    _browser = {};
+    function GetIEVersion() {
+
+        var ua = window.navigator.userAgent; var msie = ua.indexOf("MSIE "); if (msie > -1) { return ua.substring(msie + 5, ua.indexOf(".", msie)) + " - " + ua; } else if (navigator.userAgent.match(/Trident.*rv\:11\./)) { return 11 + " - " + ua; } else { return false; }
+    }
+
+
+    function InitliazePageValues()
+
+    {
+		//<!-- spnbrowser.innerText = GetIEVersion(); -->
+        //alert($(IS_System_AgentID).attr("value"));
+        //tagAgentID.innerText = "static since IS System Agent ID is not binding";
+
+        tagAgentID.innerText = $(IS_System_AgentID).attr("value");
+        tagAgentStatus.innerText = $(IS_System_ClientStatus).attr("value");
+        tagCallID.innerText = $(IS_Attr_CallID).attr("value");
+		tagZone.innerText = $(IS_Attr_Zone).attr("value");
+		tagCampaignName.innerText = $(IS_ATTR_CampaignID).attr("value");
+
+        tagNAF_ObjectID.innerText = NAF_ObjectID;
+        tagNAF_LoanType.innerText = NAF_LoanType;
+        tagNAF_LoanState.innerText = NAF_LoanState;
+        tagNAF_LoanZip.innerText = NAF_LoanZip;
+        tagNAF_LoanPurpose.innerText = NAF_LoanPurpose;
+		tagNAF_DialerCallback.innerText = NAF_DialerCallback;
+
+        //alert($(IS_Attr_DialingMode).attr("value"));
+        switch ("Agentless")
+        {
+            case "0":
+                tagDialingMode.innerText = "Power/Predictive";
+                break;
+            case "1":
+                tagDialingMode.innerText = "Preview Mode";
+                break;
+            case "2":
+                tagDialingMode.innerText = "Place Preview";
+                break;
+            case "3":
+                tagDialingMode.innerText = "Own Agent Callback";
+                break;
+            case "4":
+                tagDialingMode.innerText = "Own Agent Callback Preview";
+                break;
+            case "5":
+                tagDialingMode.innerText = "Own Agent Callback Place Preview";
+                break;
+            case "7":
+                tagDialingMode.innerText = "Agentless";
+                break;
+            case "8":
+                tagDialingMode.innerText = "Precise Dial";
+                break;
+        }
+        setTimeout("InitliazePageValues()", 2000);
+    }
+
+    function fncDial(Phonenumber) {
+        CallActionDial("MakeCall", Phonenumber);
+    }
+
+    function fncTransfer() {
+        //place code her for transfer page
+        //OpenWindow("/Transfer.htm","Transfer","150","355");
+
+        //sendNotification();
+        mbTransferCall();
+
+    }
+
+    function mbTransferCall() {
+         var bError = false;
+
+	  if (CampaignID ==null || CampaignID =='undefined' || CampaignID =='')
+      {
+        try {
+  			//Show the value for NAF Transfer Objects:
+			//alert("NAF_ObjectID: " + NAF_ObjectID + "LoanState: " + NAF_LoanState);
+  			//alert("NAF_LoanState : " + NAF_LoanState);
+  			//alert("NAF_Identity  : " + NAF_Identity);
+  			//alert("NAF_LoanPurpose : " + NAF_LoanPurpose);
+
+
+      	}
+          catch (err) {
+              alert('Find a Lead!');
+              bError = true;
+        }
+      }
+        //alert (err);
+        if (!bError) {
+            CallActionDial("ConsultTransfer", EXT_MBTransfer);
+            //ConferenceWithThirdPartyLocalDisconnect(SLG_MBTransfer);
+        }
+        //else alert ('error dude');
+    }
+
+   function CallActionDial(Event, PhoneNumber)
+    {
+       
+		var CallObjectEx = fncGetCallObjectExFromCallID(tagCallID.innerText);
+
+    	if (CallObjectEx==null || CallObjectEx=='undefined'){
+			CallObjectEx = fncGetCallObjectExFromCallID(tagCallID.innerText);
+		}
+		
+		alert("Call Action Dial");
+        sendNotification();
+		
+    	 switch(Event)
+          {
+    		case "MakeCall":
+    			setScreenConnectingCall();
+    			scripter.callObject.Dial(PhoneNumber, false);
+    			//top.fncObjectAdded(2, scripter.callObject.id);
+    			break;
+
+    		case "BlindTransfer":
+    			if(CallObjectEx == null)
+    				return;
+    			 CallObjectEx.callObject.BlindTransfer(PhoneNumber);
+    			 //top.fncRemoveQueueObject(CallObjectEx);
+    			 setScreenDisconnectedCall();
+    			 break;
+
+    	    case "PlayDigits":
+    			if(CallObjectEx == null)
+    				return;
+    			CallObjectEx.callObject.playDigits(PhoneNumber);
+    			break;
+
+          case "ConsultTransfer":
+      			if(CallObjectEx == null || CallObjectEx=='undefined'||CallObjectEx.callObject.State == STATE_DISCONNECTED) //no call to transfer
+      		{
+      			/*alert ('No call object.  Prospect Created, but no transfer.');
+				alert("NAF_ObjectID: " + NAF_ObjectID);
+				alert("NAF_LoanType: " + NAF_LoanType);
+				alert("NAF_LoanState: " + NAF_LoanState);
+				alert("NAF_LoanPurpose: " + NAF_LoanPurpose);*/
+				return;
+
+      			/*<!-- CallObjectEx.callObject.setAttribute('NAF_ObjectID', NAF_ObjectID); -->
+				<!-- CallObjectEx.callObject.setAttribute('NAF_LoanState', NAF_LoanState); -->
+				<!-- CallObjectEx.callObject.setAttribute('NAF_LoanType', NAF_LoanType); -->
+				<!-- CallObjectEx.callObject.setAttribute('NAF_LoanPurpose', NAF_LoanPurpose); -->
+				<!-- CallObjectEx.callObject.setAttribute('NAF_LoanSource', NAF_LoanSource); -->*/
+
+      		}
+      		else if (CallObjectEx.callObject.direction == '0') //inbound call?
+          {
+
+					//get objectIDs from the form or search window.
+					//alert("inbound call");
+      				//update incoming call object with same lead ID from memory
+      				//CallObjectEx.callObject.setAttribute('EIC_Note', NAF_ObjectID);
+      				CallObjectEx.callObject.setAttribute('NAF_ObjectID', NAF_ObjectID);
+      				CallObjectEx.callObject.setAttribute('NAF_LoanState', NAF_LoanState);
+      				CallObjectEx.callObject.setAttribute('NAF_LoanType', NAF_LoanType);
+      				CallObjectEx.callObject.setAttribute('NAF_LoanPurpose', NAF_LoanPurpose);
+      				CallObjectEx.callObject.setAttribute('NAF_LoanSource', NAF_LoanSource);
+      				CallObjectEx.callObject.setAttribute('NAF_Identity', NAF_Identity);
+      				CallObjectEx.callObject.setAttribute('NAF_LeadCampaign', NAF_LeadCampaign);
+
+
+					/*alert("NAF_ObjectID: " + NAF_ObjectID);
+					alert("NAF_LoanType: " + NAF_LoanType);
+					alert("NAF_LoanState: " + NAF_LoanState);
+					alert("NAF_LoanPurpose: " + NAF_LoanPurpose);*/
+
+
+          }
+          else if (CallObjectEx.callObject.direction == '1') //outbound call?
+          {
+              //alert ('Outbound LeadID:' +  NAF_ObjectID + ' State:' + NAF_LoanState);
+			  //alert("You are inside outboud call event, setting the override event.");
+          }
+      			//by creating a second call object we automatically put the first one on hold
+      			  var CallObjectEx2 = scripter.createCallObject();
+      				CallObjectEx2.dial(PhoneNumber,false);
+      		    //CallObjectEx2.setAttribute('NAF_ObjectID','55555');
+
+      				//update new transfer call object with selected lead ID
+      				//CallObjectEx2.setAttribute('EIC_Note', NAF_ObjectID);
+      				CallObjectEx2.setAttribute('NAF_ObjectID', NAF_ObjectID);
+      				CallObjectEx2.setAttribute('NAF_LoanState', NAF_LoanState);
+      				CallObjectEx2.setAttribute('NAF_LoanType', NAF_LoanType);
+      				CallObjectEx2.setAttribute('NAF_LoanPurpose', NAF_LoanPurpose);
+      				CallObjectEx2.setAttribute('NAF_LoanSource', NAF_LoanSource);
+      				CallObjectEx2.setAttribute('NAF_Identity', NAF_Identity);
+      				CallObjectEx2.setAttribute('NAF_LeadCampaign', NAF_LeadCampaign);
+
+
+      				//update incoming call object with same lead ID
+					/*alert("Youve set the outbound stuff here");
+					alert ('Outbound LeadID:' +  NAF_ObjectID + ' State:' + NAF_LoanState);*/
+
+
+      			//var doTransfer = window.confirm("Transfer Call?");
+            var doTransfer = window.confirm("LeadID: " + NAF_ObjectID + " State: " + NAF_LoanState + "\nTransfer Call?");
+      			//should we transfer
+      			if (!doTransfer)
+      			{
+      				CallObjectEx2.disconnect();
+      				CallObjectEx.callObject.pickup();
+      				infocallstate.innerText = "Call State: " + CallObjectEx.callObject.stateString;
+      				//infocallid.innerText = CallIdLabel + CallObjectEx.id;
+              $(IS_Attr_CallID).attr("value",CallObjectEx.id);
+      				setScreenConnectedCall();
+      				return;
+      			}
+      			else {
+      			    //let's make the transfer
+      			    //alert(CallObjectEx.id);
+      			    CallObjectEx.callObject.consultTransfer(CallObjectEx2.id);
+
+      			    //free ojbects
+      					//CampaignID = "";
+
+      			    //CallObjectEx.callObject.id = -1;
+      			    //CallObjectEx2.id = -1;
+      			    setScreenDisconnectedCall();
+					SetDefaultValues();
+					//NAF_ObjectID = null;
+					//NAF_LoanState = null;
+					//NAF_LoanType = null;
+      			}
+      			break;
+          }
+      }
+
+
+    function ManualDial()
+    {
+    	OpenWindow("DialOther.htm","DialOther","100","275");
+    }
+
+    function CallAction(Event, CallObjectEx)
+    {
+    	// The call actions are based upon
+    	// the currently selected queue item if no object is specified in the args.
+    	if (CallObjectEx==null || CallObjectEx=='undefined')
+    	CallObjectEx = fncGetCallObjectExFromCallID(tagCallID.innerText);
+    	//check the object again if the above statement found nothing.
+    	if(CallObjectEx == null)
+    		return;
+    //alert(CallObjectEx.id);
+    	switch(Event)
+    	{
+    		case "Pickup":
+    			CallObjectEx.callObject.Pickup();
+    			break;
+
+    		case "Disconnect":
+    			CallObjectEx.callObject.Disconnect();
+    			break;
+
+    		case "Hold":
+    			CallObjectEx.callObject.Hold();
+    			break;
+
+    		case "VoiceMail":
+    			CallObjectEx.callObject.Voicemail();
+    			break;
+
+    		case "Listen":
+    			CallObjectEx.callObject.Listen();
+    			break;
+
+    		case "Record":
+    			CallObjectEx.callObject.Record();
+    			break;
+
+    		case "Mute":
+    			CallObjectEx.callObject.Mute();
+    			break;
+
+    		case "Private":
+    			CallObjectEx.callObject.Private();
+    			break;
+
+    		default:
+    			break;
+    	}
+    }
+
+//-------------****************Agent Driven Page Actions*************--------------------
+function SetClientStatus(statusID) {
+  //  IS_Action_ClientStatus.StatusID = statusID;
+  //  alert (statusID);
+
+    $(IS_Action_ClientStatus).attr("StatusID",statusID);
+    IS_Action_ClientStatus.click();
+    //tagCampaignName.innerText = $(IS_Action_ClientStatus).attr("StatusID")
+            //alert($(IS_Attr_DialingMode).attr("value"));
+           //switch ($(IS_Attr_DialingMode).attr("value"))
+}
+
+//________****************USER OBJECT HANDLERS***********________
+function fncStatusChanged(newStatus, untilDateTime) {
+    //infostatus.innerText = newStatus;
+    //fncResetTimer();
+    //infostatus.innerText = newStatus;
+    //fncResetTimer();
+
+}
+
+function fncSetStatus(status) {
+    //IS_ACTION_ClientStatus.statusKey = status;
+    $(IS_Action_ClientStatus).attr("StatusID",status);
+    if (typeof scripter != "undefined") IS_Action_ClientStatus.click();
+}
+function GoAvailable() {
+    // set the agent status to Available
+    fncSetStatus("Available");
+    fncCleanAttrArrays();
+}
+
+function GoBreak() {
+    //fncInfoWindowUpdate("break", "");
+    //onBreak = true;
+    //fncInfoWindowUpdate("break", "");
+    onBreak = true;
+    fncSetStatus(BREAK_STATUS);
+    //setScreenBreak();
+    //main.location.href = BreakPage;
+    //location.href = BreakPage;
+    //scrBreak.style.visibility='visible';
+    //document.getElementById("scrBreak").style.display = 'block';
+    //TimerInit();
+}
+
+function EndBreak() {
+    //document.body.style.backgroundColor = "#FFFFFF";
+    // end break and take more calls
+    //onBreak = false;
+    //fncInfoWindowUpdate("break", "");
+    //btnBreak.disabled = false;
+
+    onBreak = false;
+    //fncInfoWindowUpdate("break", "");
+    //btnBreak.disabled = false;
+
+    IS_Action_EndBreak.click();
+    //main.location.href = WaitForCallPage;
+    //location.href = WaitForCallPage;
+    //document.getElementById("scrBreak").style.display = 'none';
+
+}
+
+function fncBreak() {
+
+
+    //request a break. When the break is granted, IS_Event_BreakGranted() will fire.
+    //btnBreak.disabled=true;
+
+
+    //btnBreak.disabled = true;
+    if (typeof scripter != "undefined") {
+        if (IS_ATTR_WorkflowID.value != null &&
+		   IS_ATTR_WorkflowID.value != 'undefined' &&
+		   IS_ATTR_WorkflowID.value != '') {
+            //fncInfoWindowUpdate("break", "Break Pending");
+            //fncInfoWindowUpdate("break", "Break Pending");
+            IS_Action_RequestBreak.click();
+        }
+        else GoBreak();
+    }
+}
+
+function fncLogoff() {
+    //btnLogoff.disabled=true;
+    btnLogoff.disabled = true;
+    if (typeof scripter != "undefined") IS_ACTION_RequestLogoff.click();
+    //fncInfoWindowUpdate("logoff", "Log Off Pending");
+    fncInfoWindowUpdate("logoff", "Log Off Pending");
+}
+
+function fncSetStage(stageNumber) {
+    IS_Action_Stage.stage = stageNumber;
+    IS_Action_Stage.click();
+}
+
+
+function setScreenConnectedCall()
+{
+  document.body.style.backgroundColor = "#40f040";
+	//alert ('ConnnectedCall');
+	//btnPickup.disabled = false;
+
+	//alert ('step2');
+
+	//btnHold.disabled = false;
+	//btnMute.disabled = false;
+	//btnDisconnect.disabled = false;
+	//btnTransfer.disabled = false;
+
+	//if(bRecordingPermitted)
+		//btnRecord.disabled = false;
+	//else
+		//btnRecord.disabled = true;
+
+	//HidePreviewDial();
+/*
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+*/
+}
+
+function setScreenConnectingCall()
+{
+	btnPickup.disabled = true;
+	btnHold.disabled = true;
+	btnMute.disabled = true;
+	btnDisconnect.disabled = false;
+	btnTransfer.disabled = true;
+
+	if(bRecordingPermitted)
+		btnRecord.disabled = true;
+	else
+		btnRecord.disabled = true;
+
+	//HidePreviewDial();
+	/*
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+	*/
+}
+
+function setScreenDisconnectedCall()
+{
+  document.body.style.backgroundColor = "#FFFFFF";
+	//btnPickup.disabled = true;
+	//btnHold.disabled = true;
+	//btnMute.disabled = true;
+	//btnDisconnect.disabled = true;
+	//btnTransfer.disabled = true;
+
+	//if(bRecordingPermitted)
+	//	btnRecord.disabled = true;
+	//else
+	//	btnRecord.disabled = true;
+
+	/*
+	HidePreviewDial();
+
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+	*/
+}
+
+
+function Init() {
+
+  if (typeof scripter != "undefined")
+	{
+		//Update the current status message
+		fncStatusChanged(scripter.myUser.statusMessage);
+		//Set event handler for status changes
+		scripter.myUser.statusChangeHandler = fncStatusChanged;
+		//define inbound call events
+		scripter.myQueue.callObjectAddedHandler = fncObjectAdded;     //triggers when new inbound call is added to users queue object
+		scripter.myQueue.objectRemovedHandler = fncObjectRemoved;		//triggers when queue object is removed from queue (not disconnected)
+		scripter.myQueue.objectChangedHandler = fncCallObjectChanged;		//triggers when call state of call object is changed
+		scripter.CallObject.stateChangeHandler = fncCallStateChange;
+
+		var curCallObject;
+		var callObjectEnum = scripter.myQueue.startCallObjectsEnum;
+		//since this is now a new page, lets see whats in the user queue again
+		while(callObjectEnum.hasMoreElements())
+		{
+			curCallObject = callObjectEnum.nextElement();
+			fncObjectAdded(curCallObject);
+		}
+	}
+
+	InitliazePageValues();
+
+	// CAUSED LOOP
+	if(LoadStatusAndLoadDomain == false){
+	InitMain(); //attempt to load this once, refactor tomorrow for a cleaner logic flow
+	}
+
+}
+
+//-------------------***********CALL OBJECT HANDLERS***********-------------
+function fncObjectAdded(CallObject)
+{
+	//set the scripter.CallObject method to reflect THIS call
+	//scripter.CallObject.id = CallObjectId;
+	var CallObjectId = CallObject.id;
+	//alert(CallObjectId);
+
+	//set up the CallObject variable
+	//var CallObject = scripter.CallObject;
+
+	//CallObject
+	if(CallObject == null)
+	 return;
+
+	// Call is not disconnected
+	if(CallObject.State == STATE_DISCONNECTED)
+	return;
+
+	// verify that this object does not already exist in our QueueObject Array.
+	if(fncGetCallObjectExFromCallObject(CallObject) != null)
+	 return;
+	bCallConnected = true;
+
+	// find the next open position in the array
+	for(var i=0; i<QueueObjectArray.length; i++)
+	{
+	 if(QueueObjectArray[i] == null)
+		break;
+	}
+
+	// add the call object to the array
+	QueueObjectArray[i] = new Object();
+	var CallObjectEx = QueueObjectArray[i];
+
+	// call object attributes
+	CallObjectEx.callObject = CallObject;
+	CallObjectEx.id = CallObject.id;
+	CallObjectEx.phonenumber = CallObject.getAttribute('Eic_RemoteTn');
+	CallObjectEx.dnis = CallObject.getAttribute('Eic_LocalTn');
+	CallObjectEx.IntAttdnis = CallObject.getAttribute('IntAtt_LocalTn');
+
+
+	//alert (CallObjectEx.phonenumber);
+	infocallerid.innerText = CallObjectEx.phonenumber;
+	infocampaign.innerText = 'new call...';
+	infoDNIS.innerText = CallObjectEx.IntAttdnis;
+	NAF_DNIS = CallObjectEx.IntAttdnis;
+
+	//Added to Look Up Lead Field:
+	document.getElementById("PhoneNumber").value = CallObjectEx.phonenumber;
+	document.getElementById("RefID").value = "";
+
+	/*<!-- alert("inside fncObjectAdded NAF_DNIS Object " + NAF_DNIS); -->
+	<!-- alert("inside fncObjectAdded CallObjectEx.IntAttdnis Object " + CallObjectEx.IntAttdnis); -->*/
+	//alert("phone number " + document.getElementById("PhoneNumber").value)
+
+	//tagCallID.innerText = $(IS_Action_ClientStatus).attr("StatusID");
+	//IS_Attr_CallID.value;
+	//tagCallID.innerText = $(IS_Attr_CallID).attr("value");
+
+	//Write trace message
+	//fncTrace('Object ' + CallObjectId + ' added to queue', '2');
+
+	//update call id label
+
+	//Enable Call Control buttons
+	setScreenConnectedCall(); //setScreenFunc.js
+
+
+	if(CallObject.direction == 1)
+	{
+		//infocallerid.innerText = CallIdLabel + CallObjectId;
+    $(IS_Attr_CallID).attr("value",CallObjectId); //save the call id for later use, which will also update tagCallID
+
+		CallObjectEx.direction = 'outbound';
+    CampaignID = CallObject.getAttribute("IS_ATTR_CampaignID");
+    infocampaign.innerText = "outbound call....";
+    tagCampaignName.innerText = "outbound call";
+    //alert (CampaignID);
+    if (CampaignID != null && CampaignID != "")
+    {
+      //alert ('retrieving attributes');
+      NAF_ObjectID = CallObject.getAttribute("NAF_ObjectID");
+      NAF_LoanState = CallObject.getAttribute("NAF_LoanState");
+      NAF_LoanZip = CallObject.getAttribute("NAF_LoanZip");
+      NAF_LoanType = CallObject.getAttribute("NAF_LoanType");
+      NAF_LoanPurpose = CallObject.getAttribute("NAF_LoanPurpose");
+      NAF_LoanSource = CallObject.getAttribute("NAF_LoanSource");
+      NAF_LeadCampaign = CallObject.getAttribute("NAF_LeadCampaign");
+      infocampaign.innerText = CampaignID;
+      tagCampaignName.innerText = "campaign call...";
+
+	  document.getElementById("PhoneNumber").value = "";
+	  document.getElementById("RefID").value = NAF_ObjectID;
+
+	  initSearch();
+      validatorOverrider = true;
+    }
+
+
+    //alert(CallObjectEx.direction + '\n' + CallObject.getAttribute(AgentlessTransferAttrName));
+		if(CallObject.getAttribute(AgentlessTransferAttrName) == 'true')
+		{
+			CallObject.setAttribute(AgentlessSuccessAttrName, 'success');
+			//alert(CallObject.getAttribute(AgentlessSuccessAttrName));
+			CallObjectEx.agentless = true;
+			//customInboundSetupCall(CallObject); //customInboundFunc.js
+		}
+		else
+		{
+			CallObjectEx.agentless = false;
+			//customInboundSetupCall(CallObject);
+		}
+	}
+
+	// Is inbound call?
+	if(CallObject.direction == 0)
+	{
+		//infocallerid.innerText = CallIdLabel + CallObjectId;
+    $(IS_Attr_CallID).attr("value",CallObjectId);
+		CallObjectEx.direction = 'inbound';
+    infocampaign.innerText = CallObjectEx.direction;
+
+    //retrieve value set from Attendant profile
+    NAF_DialerCallback = CallObject.getAttribute("NAF_DialerCallback");
+    validatorOverrider = false;
+
+		if(CallObject.getAttribute(AgentlessTransferAttrName) == 'true')
+			CallObjectEx.agentless = true;
+		else CallObjectEx.agentless = false;
+
+	    // bring the app window to the top
+	    if (typeof scripter != "undefined") IS_Action_SetForeground.click();
+
+	    // bring this tab page to the top
+	    if (typeof scripter != "undefined") IS_Action_SelectPage.click();
+
+		//customInboundSetupCall(CallObject); //customInboundFunc.js
+		//alert("what is the dnis " + CallObjectEx.IntAttdnis);
+		MapSourceNumber(CallObjectEx.IntAttdnis);
+	}
+
+	return(CallObject);
+}
+
+function fncCallObjectChanged(TypeId, ObjectId)
+{
+	//make sure the correct call id is assigned
+	scripter.CallObject.id = ObjectId;
+
+	var CallObject = scripter.CallObject;
+
+	//Write trace message
+	//fncTrace('Object ' + ObjectId + ' changed to callstate '+ CallObject.state , '2');
+
+	//Call disconnected
+	if (CallObject.state == STATE_DISCONNECTED)
+	{
+//remove the object from the array. This also happens the object is removed, but in case something goes wrong, no memory leak
+		var CallObjectEx = fncGetCallObjectExFromCallObject(CallObject);
+		if(CallObjectEx != null)
+		{
+			if (CallObjectEx.agentless != true)
+		    fncRemoveQueueObject(CallObjectEx);
+			else CallDisconnectedTime=new Date();
+		}
+		//reset call control buttons
+     setScreenDisconnectedCall(); //setScreenFunc.js
+		//Empty campaign name
+	    //callinfo.infocampaign.innerText = "Call Type: [None]";
+	}
+  else if (CallObject.state == CONNECTED)
+  {
+    setScreenConnectedCall();
+  }
+	infocallstate.innerText = "CallObjectChange: " + CallObject.stateString;
+}
+
+function fncCallStateChange(StateId, StateString)
+{
+	//do something
+	infocallstate.innerText = 'CallStateChange: ' + StateString;
+}
+
+function fncObjectRemoved(TypeId, ObjectId)
+{
+	//find the object in the array
+	var CallObjectEx = fncGetCallObjectExFromCallID(ObjectId);
+	if(CallObjectEx == null)
+		return;
+//remove the object form the array. This also happens the call is disconnected, but in case something goes wrong, no memory leak
+	if(CallObjectEx != null)
+	{
+		if (CallObjectEx.agentless != true)
+			fncRemoveQueueObject(CallObjectEx);
+	}
+
+	//fncTrace('CustomObjectRemoved', '2');
+	//fncTrace(ObjectId, '2');
+  //alert ('Removed: ',ObjectId);
+
+  // remove this object from the queue display
+  // insert other code here as needed...
+}
+
+
+function fncCallStateChange(StateId, StateString)
+{
+	//do something
+	infocallstate.innerText = 'Call State: ' + StateString;
+}
+
+function fncObjectRemoved(TypeId, ObjectId)
+{
+	//find the object in the array
+	var CallObjectEx = fncGetCallObjectExFromCallID(ObjectId);
+	if(CallObjectEx == null)
+		return;
+//remove the object form the array. This also happens the call is disconnected, but in case something goes wrong, no memory leak
+	if(CallObjectEx != null)
+	{
+		if (CallObjectEx.agentless != true)
+			fncRemoveQueueObject(CallObjectEx);
+	}
+
+	//fncTrace('CustomObjectRemoved', '2');
+	//fncTrace(ObjectId, '2');
+  //alert ('Removed: ',ObjectId);
+
+  // remove this object from the queue display
+  // insert other code here as needed...
+}
+
+
+//------------***********Array Handlers***********-------------
+function fncGetCallObjectExFromCallObject(CallObject)
+{
+  for(var i=0; i<QueueObjectArray.length; i++)
+  {
+	 if((QueueObjectArray[i] != null) && (QueueObjectArray[i].callObject == CallObject))
+	 {
+		return(QueueObjectArray[i]);
+	 }
+  }
+
+  return(null);  // not found
+}
+
+function fncGetCallObjectExFromCallID(CallID)
+{
+      for(var i=0; i<QueueObjectArray.length; i++)
+      {
+         if((QueueObjectArray[i] != null) && (QueueObjectArray[i].id == CallID))
+         {
+			return(QueueObjectArray[i]);
+         }
+      }
+      return(null);  // not found
+   }
+
+function fncRemoveQueueObject(CallObjectEx)
+{
+    if(CallObjectEx == null)
+        return;
+
+		// find the queue object array entry
+	for(var i=0; i<QueueObjectArray.length; i++)
+	{
+		if((QueueObjectArray[i] != null) && (QueueObjectArray[i].callObject.id == CallObjectEx.callObject.id))
+		{
+			// remove the object from the table and the array
+			QueueObjectArray[i] = null;
+		}
+	}
+
+}
+
+function fncInitAttrs(attrNames, attrValues)
+{
+	for (var i=0; i<attrNames.length; i++)
+	{
+		//alert(i + "\t" + attrNames[i]);
+		if(attrNames[i] == 'is_attr_campaignid')
+		CampaignID = attrValues[i];
+
+		if(attrNames[i] == 'is_attr_workflowid')
+		WorkflowID = attrValues[i];
+
+		if(attrNames[i] == 'is_attr_i3_identity')
+		i3_identity = attrValues[i];
+		/*
+		if(!fncIsDefaultAttr(attrNames[i]))
+		{
+		*/
+		attrNamesArray.push(attrNames[i]);
+		attrValuesArray.push(attrValues[i]);
+		//}
+	}
+}
+
+function fncIsDefaultAttr(name)
+{
+	for (var i=0; i<DEFAULT_ATTRS.length; i++)
+	{
+
+		if (DEFAULT_ATTRS[i] == name)
+			return true;
+	}
+	//alert(name + "\tfalse");
+	return false;
+}
+
+function fncCleanAttrArrays()
+{
+	attrNamesArray = null;
+	attrValuesArray = null;
+	attrNamesArray = new Array();
+	attrValuesArray = new Array();
+}
+
+function showAttrs()
+{
+	var alertString ='';
+	for (var i=0; i<attrNamesArray.length; i++)
+	{
+		alertString = alertString + "\n" + i + "\t" + attrNamesArray[i] + ":\t" + top.attrValuesArray[i];
+	}
+	alert(alertString);
+}
+
+function getDialerAttribute(name)
+{
+	var found = false;
+	for (var i=0;i < attrNamesArray.length; i++)
+	{
+		if (attrNamesArray[i]=="is_attr_"+name.toLowerCase())
+		{
+			found = true;
+			break;
+		}
+	}
+	if (found)
+	{
+		return attrValuesArray[i];
+	}
+	else return("Value Not Found");
+}
+
+function setDialerAttribute(name, value)
+{
+	for (var i=0; i < attrNamesArray.length; i++)
+	{
+		if (attrNamesArray[i] == "is_attr_"+name.toLowerCase())
+			attrValuesArray[i] = value;
+	}
+}
+
+function updateDialerAttributes()
+{
+	var sUpdateString;
+	//sUpdateString = "alert(sUpdateString)";
+	for (var i=0; i < attrNamesArray.length; i++)
+	{
+		if(attrNamesArray[i] != undefined && attrNamesArray[i] != 'direction' && !fncIsDefaultAttr(attrNamesArray[i]))
+		{
+			sUpdateString = attrNamesArray[i] + ".value = attrValuesArray[i];";
+			eval(sUpdateString);
+		}
+	}
+}
+
+
+//---------***************DIALER EVENT HANDLERS*************--------------------
+function IS_Event_DataPop(names, values)
+{
+	    // bring the app window to the top
+	    if (typeof scripter != "undefined") IS_Action_SetForeground.click();
+
+	    // bring this tab page to the top
+	    if (typeof scripter != "undefined") IS_Action_SelectPage.click();
+	fncInitAttrs(names, values);
+	infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+	//checkPageLoads("setScreenPredictivePop();", 0); //setScreenFunc.js
+	//dispoCheck();
+    	//top.main.location.href = PredictivePage;
+}
+
+function IS_Event_PreviewDataPop(names, values)
+{
+	    // bring the app window to the top
+	    if (typeof scripter != "undefined") IS_Action_SetForeground.click();
+
+	    // bring this tab page to the top
+	    if (typeof scripter != "undefined") IS_Action_SelectPage.click();
+	//fncInitAttrs(names, values);
+	infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+	//checkPageLoads("setScreenPreviewPop();", 0); //setScreenFunc.js
+	//dispoCheck();
+    	//main.location.href = PreviewPage;
+}
+
+/* *************IS_Event_DataPop() is used instead
+function IS_Event_NewPredictiveCall(CallId)
+{
+   // Pop the predictive page
+}
+*/
+
+function IS_Event_NewPreviewCall(CallId)
+{
+}
+
+function IS_Event_PredictiveCallReleased(callid)
+{
+}
+
+function IS_Event_BreakGranted()
+{
+	GoBreak();
+    // navigate to the on break page
+}
+
+
+
+function Disconnect() {
+          //alert (scripter.callObject.id);
+          scripter.callObject.disconnect();
+
+		  document.getElementById("SourceCodes").diabled = false;
+
+		  //alert("disconnected");
+		  //IS_Action_Disconnect.click();
+		  SetDefaultValues();
+      }
+
+function Pickup() {
+        scripter.callObject.pickup();
+         //IS_Action_Pickup.click();
+
+		 //Check for DNIS and Set's Source
+	}
+
+
+//Per Avtex regarding their Handler
+function sendNotification()  //Excuting the Notifcation to the Server (Everytime we need to do the transfer this will be called)
+{
+    //ObjectID ==> Broker_LoanAgentRouting
+    //Event ID ==> StartTransfer
+    //Data Parameters:
+    //Agent ID ==> PureConnect Agent ID for the agent that initated the silent consult transfer request
+    //Active Call ID ==> The Connected inbound or outbound call interaction id
+    //Zip Code ==> BrokerSolution_LocalAgentRouting_ZipCode
+    //Interaction Attribute Names: List of Interaction Attribute Names that should be copied from the connected call to the transferred call.
+    //subToNotificationResponse();
+	alert("Send Notification Starting Here ");
+    var agentID = $(IS_System_AgentID).attr("value"); //"Mark";
+    var callID = 0123456789; //$(IS_Attr_CallID).attr("value");
+	var zipCode = 92503;
+
+	//Needs Client Service Controller update from GetProspectInfo Address vs Subject
+	//Atttributes string rep values
+	
+	//alert("Agent ID " + agentID);
+	//alert("Call ID " + callID);
+	//alert("Zip Code " + zipCode);
+	
+	var dataArray = [agentID + ',' + callID + ',' + zipCode + ',' + ""];
+
+	/*alert("ObjectID " + NAF_ObjectID);
+	alert("State" + NAF_LoanState);
+	alert("Loan Type " + NAF_LoanType);
+	alert("Loan Purpose " + NAF_LoanPurpose);
+	alert("Loan Source " + NAF_LoanSource);
+	alert("Loan Campaign " + NAF_LeadCampaign);
+	alert("Loan Zip " + NAF_LoanZip);*/
+					
+    //var dataArray = [scripter.AgentID + ',' + scripter.CallId + ',' + zipCode + ',' + 'Broker_Skill1|Broker_Skill2|Broker_Skill3|Broker_State'];
+
+	//Start this when we want to do the transfer process (SEND EVENT BELOW)
+	alert("Scripter is " + scripter);
+	alert("dialer is " + scripter.dialer);
+	
+	//scripter.dialer.sendCustomHandlerNotification('Broker_LoanAgentRouting', 'Start', dataArray);  //
+	//scripter.dialer.ICWS('Broker_LoanAgentRouting', 'Start', dataArray);  
+	scripter.dialer.sendCustomHandlerNotification('Broker_LoanAgentRouting', 'Start', dataArray);  //
+	alert("Passed the error");
+}
+
+function subToNotificationResponse() //Whatever function below get's excuted
+{
+    alert("Inside the sub to notification response method");
+	var agentID = $(IS_System_AgentID).attr("value");
+	
+	//if(agentID == "subscribed")
+	//{
+		alert("Inside Sub area");
+		
+		var headers = {
+        "objectId": + agentID,
+        "eventId": "Broker_LoanAgentRouting_TransferUpdate"
+		};
+
+		scripter.dialer.subscribeToCustomHandlerNotification(headers, whatever);
+	//}
+	//else
+	//{
+		//alert("outside of sub area");
+		//Nothing to do (since subscribed)
+	//}
+
+}
+
+//Callback from ExcuteWhenHandler Responds
+function whatever(objectId, eventId, data)
+{
+	//Data: String array
+    alert("Hitting the whatever function now");
+
+	//A: Agent Call ID
+	//B: Status Messages (see Notes )
+	//C: Loan Agent Call ID
+	//D: Loan Agent Name
+	//E: Loan Agent Phone Number
+
+	//Always going to get the Agent Call ID --> Agent that kicked off the process
+	//The ones answerd Loan Agent ID --> Call Connected to the Agent (Name/Phone Number) (CDE)
+	//If not Connected (A and B )
+
+	//LoanAgentRouting_BranchQueue_Answered  (For Testing )
+		//**Call ID (Not Valid) - one I passed in
+		//Loan Agent ID: 1-0
+		//Loan Agent Name Avtex
+		//Loan Agent Phone Number 630* (Will's Number)
+
+	//LoanAgentRouting_InsideQueue_Answered
+}
+
+
+///////////////////////////////////
+///////////////////////////////////
+
+        function InitMain() {
+
+
+			SetDefaultValues();
+
+            GetAndSetAgentInfo();
+			LoadSourceCodesList();
+            LoadDomainList();
+			LoadAgentConfig();
+
+			LoadStatusAndLoadDomain = true;
+
+        }
+
+		function GetAndSetAgentInfo(){
+
+		    var agentID = "Mark.Clintsman"; //document.getElementById("tagAgentID").innerText;  //"Mark.Clintsman";
+
+			if(agentID != '' || agentID != 'undefined'){
+
+			    var urlGetAgentInfoURL = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetAgentInfoByName?agentName=" + agentID;
+				var agentInfo = null;
+
+				xhr = new XMLHttpRequest();
+				xhr.open("GET", urlGetAgentInfoURL, false);
+				xhr.setRequestHeader("Content-Type", "application/json");
+
+				xhr.onreadystatechange = function(){
+
+					var DONE = 4;
+					var OK = 200;
+
+					if(xhr.readyState === DONE && xhr.status === OK && this.responseText != ""){
+
+						agentInfo = JSON.parse(this.responseText);
+						if(agentInfo){
+
+							document.getElementById("tagBVAgentID").innerText = agentInfo.ObjectID;
+
+						}else{
+
+							alert("Nothing was returned, using call Queue for association");
+						}
+
+					}else{
+
+						alert("There was nothing returned");
+					}
+				}
+				xhr.send(null);
+			}
+		}
+
+		function SetDefaultValues(){
+
+			//Look Up Lead (Main Form)
+			document.getElementById("AddressLine1").value = "";
+			document.getElementById("AddressCity").value = "";
+			document.getElementById("NameFirst").value = "";
+			document.getElementById("PhoneNumber").value = "";
+			document.getElementById("RefID").value = "";
+
+			document.getElementById("AddressZip").value = "";
+			document.getElementById("AddressState").selectedIndex = 0;
+			document.getElementById("NameLast").value = "";
+			document.getElementById("DomainID").value = "68";
+
+			document.getElementById("searchResults").innerHTML = "";
+
+			//New Prospect Fields
+			document.getElementById("firstName").value = "";
+			document.getElementById("middleName").value = "";
+			document.getElementById("lastName").value = "";
+
+			document.getElementById("PhoneHome").value = "";
+			document.getElementById("PhoneWork").value = "";
+			document.getElementById("PhoneCell").value = "";
+
+			document.getElementById("primaryEmail").value = "";
+			document.getElementById("alternateEmail").value = "";
+
+			document.getElementById("txtProspectNote").value = "";
+
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlBranches").disabled = false;
+			document.getElementById("ddlBranches").value = 68;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("ddlAgents").disabled = true;
+
+			document.getElementById("rbQueue").checked = false;
+			document.getElementById("ddlQueue").disabled = true;
+
+			document.getElementById("newLeadAddressLine1").value = ""
+			document.getElementById("newLeadAddressCity").value = ""
+			document.getElementById("newLeadState").selectedIndex = 0;
+			document.getElementById("newLeadAddressZip").value = "";
+
+			document.getElementById("isPurchaseLoan").checked = false;
+			document.getElementById("SourceCodes").selectedIndex = 0;
+			document.getElementById("SourceCodes").disabled = false;
+			document.getElementById("origSource").value = "None";
+
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlSelectLanguage").selectedIndex = 0;
+			document.getElementById("IsTestLead").checked = false;
+
+			//Default Validation
+			document.getElementById("firstName").style.background = '#ffffff'
+			document.getElementById("lastName").style.background = '#ffffff'
+			document.getElementById("newLeadState").style.background = '#ffffff'
+			document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+			document.getElementById("PhoneHome").style.background = '#ffffff'
+			document.getElementById("PhoneWork").style.background = '#ffffff'
+			document.getElementById("PhoneCell").style.background = '#ffffff'
+
+			//Set i3 defaults
+
+			document.getElementById("tagNAF_ObjectID").innerText = null;
+			document.getElementById("tagNAF_LoanType").innerText = null;
+			document.getElementById("tagNAF_LoanState").innerText = null;
+			document.getElementById("tagNAF_LoanZip").innerText = null;
+			document.getElementById("tagNAF_LoanPurpose").innerText = null;
+
+			//Overide set to default
+			validatorOverrider = false;
+			document.getElementById("newProspect").style.display = "none";
+			document.getElementById("bvProspectID").value = "";
+			document.getElementById("bvLeadSourceEnum").value = "";
+			document.getElementById("bvDataResultID").value = "";
+
+			document.getElementById("ddlBranches").disabled = false;
+			document.getElementById("rbBranches").checked = true;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("rbQueue").checked = false;
+
+			document.getElementById("ddlAgents").disabled = true;
+			document.getElementById("ddlQueue").disabled = true;
+
+			sendGroupSelection = "branch";
+			document.getElementById("infoDNIS").innerText = null;
+			infocallerid.innerText = null;
+
+			//Disconnected object should clear naf
+			NAF_ObjectID = null;
+			NAF_LoanType = null;
+			NAF_LoanState = null;
+			NAF_LoanZip = null;
+			NAF_LoanPurpose = null;
+			NAF_LoanSource = null;
+			NAF_DNIS = null;
+		}
+
+		function SetPersistedDefaults(){
+
+			//New Prospect Fields
+			document.getElementById("firstName").value = "";
+			document.getElementById("middleName").value = "";
+			document.getElementById("lastName").value = "";
+
+			document.getElementById("PhoneWork").value = ""
+			document.getElementById("PhoneCell").value = ""
+			document.getElementById("SourceCodes").disabled = false;
+
+			document.getElementById("primaryEmail").value = ""
+			document.getElementById("alternateEmail").value = ""
+
+			document.getElementById("txtProspectNote").value = ""
+
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlBranches").disabled = false;
+			document.getElementById("ddlBranches").value = 68;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("ddlAgents").disabled = true;
+
+			document.getElementById("rbQueue").checked = false;
+			document.getElementById("ddlQueue").disabled = true;
+
+			document.getElementById("newLeadAddressLine1").value = ""
+			document.getElementById("newLeadAddressCity").value = ""
+			document.getElementById("newLeadState").selectedIndex = 0;
+			document.getElementById("newLeadAddressZip").value = "";
+
+			document.getElementById("isPurchaseLoan").checked = false;
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlSelectLanguage").selectedIndex = 0;
+			document.getElementById("IsTestLead").checked = false;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("rbQueue").checked = false;
+
+			document.getElementById("ddlAgents").selectedIndex = 0;
+			document.getElementById("ddlQueue").selectedIndex = 0;
+
+			//Default Validation
+			document.getElementById("firstName").style.background = '#ffffff'
+			document.getElementById("lastName").style.background = '#ffffff'
+			document.getElementById("newLeadState").style.background = '#ffffff'
+			document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+			document.getElementById("PhoneHome").style.background = '#ffffff'
+			document.getElementById("PhoneWork").style.background = '#ffffff'
+			document.getElementById("PhoneCell").style.background = '#ffffff'
+
+			document.getElementById("bvProspectID").value = "";
+
+			document.getElementById("ddlBranches").disabled = false;
+			document.getElementById("rbBranches").checked = true;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("rbQueue").checked = false;
+
+			document.getElementById("ddlAgents").disabled = true;
+			document.getElementById("ddlQueue").disabled = true;
+
+			sendGroupSelection = "branch";
+
+		}
+
+		function ClearLVMDataEntry(){
+
+			//Look Up Lead (Main Form)
+			document.getElementById("AddressLine1").value = "";
+			document.getElementById("AddressCity").value = "";
+			document.getElementById("NameFirst").value = "";
+			document.getElementById("RefID").value = "";
+
+			document.getElementById("AddressZip").value = "";
+			document.getElementById("AddressState").selectedIndex = 0;
+			document.getElementById("NameLast").value = "";
+			document.getElementById("DomainID").value = "68";
+
+			document.getElementById("searchResults").innerHTML = "";
+
+			//New Prospect Fields
+			document.getElementById("firstName").value = "";
+			document.getElementById("middleName").value = "";
+			document.getElementById("lastName").value = "";
+
+			document.getElementById("PhoneHome").value = ""
+			document.getElementById("PhoneWork").value = ""
+			document.getElementById("PhoneCell").value = ""
+
+			document.getElementById("primaryEmail").value = ""
+			document.getElementById("alternateEmail").value = ""
+
+			document.getElementById("txtProspectNote").value = ""
+
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlBranches").disabled = false;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("ddlAgents").disabled = true;
+
+			document.getElementById("rbQueue").checked = false;
+			document.getElementById("ddlQueue").disabled = true;
+
+			document.getElementById("newLeadAddressLine1").value = ""
+			document.getElementById("newLeadAddressCity").value = ""
+			document.getElementById("newLeadState").selectedIndex = 0;
+			document.getElementById("newLeadAddressZip").value = "";
+
+			document.getElementById("isPurchaseLoan").checked = false;
+			document.getElementById("SourceCodes").disabled = false;
+			document.getElementById("origSource").value = "None";
+
+			document.getElementById("rbBranches").checked = true;
+			document.getElementById("ddlSelectLanguage").selectedIndex = 1;
+			document.getElementById("IsTestLead").checked = false;
+
+			document.getElementById("SourceCodes").selectedIndex = 0;
+			document.getElementById("SourceCodes").disabled = false;
+
+			//Default Validation
+			document.getElementById("firstName").style.background = '#ffffff'
+			document.getElementById("lastName").style.background = '#ffffff'
+			document.getElementById("newLeadState").style.background = '#ffffff'
+			document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+			document.getElementById("PhoneHome").style.background = '#ffffff'
+			document.getElementById("PhoneWork").style.background = '#ffffff'
+			document.getElementById("PhoneCell").style.background = '#ffffff'
+
+			//Set i3 defaults
+
+			document.getElementById("tagNAF_ObjectID").innerText = null;
+			document.getElementById("tagNAF_LoanType").innerText = null;
+			document.getElementById("tagNAF_LoanState").innerText = null;
+			document.getElementById("tagNAF_LoanZip").innerText = null;
+			document.getElementById("tagNAF_LoanPurpose").innerText = null;
+
+			//Overide set to default
+			validatorOverrider = false;
+			document.getElementById("newProspect").style.display = "none";
+			document.getElementById("bvProspectID").value = "";
+
+			document.getElementById("ddlBranches").disabled = false;
+			document.getElementById("rbBranches").checked = true;
+
+			document.getElementById("rbAgent").checked = false;
+			document.getElementById("rbQueue").checked = false;
+
+			document.getElementById("ddlAgents").disabled = true;
+			document.getElementById("ddlQueue").disabled = true;
+
+			sendGroupSelection = "branch";
+
+			//Disconnected object should clear naf
+			NAF_ObjectID = null;
+			NAF_LoanType = null;
+			NAF_LoanState = null;
+			NAF_LoanZip = null;
+			NAF_LoanPurpose = null;
+			NAF_DNIS = null;
+		}
+
+        function LoadSourceCodesList() {
+
+            var urlSourceCodesList = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLoadSourceCodes?parentDomainID=68"
+			var sourceCodeData = null;
+
+            //Old School... :X
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", urlSourceCodesList, false);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                var DONE = 4; // readyState 4 means the request is done.
+                var OK = 200; // status 200 is a successful return.
+
+                if (xhr.readyState === DONE && xhr.status === OK && this.responseText != ""){
+
+					sourceCodeData = JSON.parse(this.responseText);
+
+					//Iteration and Add To Source Code List
+					for (i = 0; i < sourceCodeData.root.length; i++) {
+
+						var sourceCode = JSON.stringify(sourceCodeData.root[i]);
+
+						var sourceCodeArray = sourceCode.split(":");
+
+						sourceCodeArray[0] = sourceCodeArray[0].replace('"', "").replace('{', "").replace('"', "")
+						sourceCodeArray[1] = sourceCodeArray[1].replace('}', "").replace('"', "").replace('"', "")
+
+						var sourceCodeList = document.getElementById("SourceCodes");
+						var sourceCodeListOption = document.createElement("option");
+
+						sourceCodeListOption.value = sourceCodeArray[0];
+						sourceCodeListOption.text = sourceCodeArray[1];
+
+						sourceCodeList.add(sourceCodeListOption);
+					}
+				}
+            };
+
+			xhr.send(null);
+        }
+
+		function LoadAgentConfig(){
+
+		    var urlAgentConfigList = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLoanAgentList"
+
+			//Setup
+			xhr = new XMLHttpRequest();
+			xhr.open("GET", urlAgentConfigList, false);
+			xhr.setRequestHeader("content-type", "application/json");
+
+			xhr.onreadystatechange = function(){
+
+				var DONE = 4;
+				var OK = 200;
+
+				if (xhr.readyState === DONE && xhr.status === OK && this.responseText != ""){
+
+					agentConfigData = JSON.parse(this.responseText);
+
+					//Iteration and Add To Source Code List
+					for (i = 0; i < agentConfigData.root.length; i++) {
+
+						var agent = JSON.stringify(agentConfigData.root[i]);
+
+						var agentConfgList = agent.split(":");
+
+						agentConfgList[0] = agentConfgList[0].replace('"', "").replace('{', "").replace('"', "")
+						agentConfgList[1] = agentConfgList[1].replace('}', "").replace('"', "").replace('"', "")
+
+						var agentList = document.getElementById("ddlAgents");
+						var agentListOption = document.createElement("option");
+
+						agentListOption.value = agentConfgList[0];
+						agentListOption.text = agentConfgList[1];
+
+						agentList.add(agentListOption);
+					}
+				}
+            };
+
+			xhr.send(null);
+        }
+
+        function LoadDomainList() {
+
+            var urlDomainList = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLoadDomains"
+
+            //Old School....:X
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", urlDomainList, false);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                var DONE = 4; // readyState 4 means the request is done.
+                var OK = 200; // status 200 is a successful return.
+
+                if (xhr.readyState === DONE) {
+                    if (xhr.status === OK){
+
+                        //console.log(this.responseText) // 'This is the returned text.'
+						loadDomainData = JSON.parse(this.responseText);
+
+						//Iteration and Add To Source Code List
+						for (i = 0; i < loadDomainData.root.length; i++) {
+
+							var domainCodes = JSON.stringify(loadDomainData.root[i]);
+
+							var domainCodesArray = domainCodes.split(":");
+
+							domainCodesArray[0] = domainCodesArray[0].replace('"', "").replace('{', "").replace('"', "")
+							domainCodesArray[1] = domainCodesArray[1].replace('}', "").replace('"', "").replace('"', "")
+
+							var domainCodesArrayList = document.getElementById("DomainID");
+							var domainCodesArrayListOption = document.createElement("option");
+
+							domainCodesArrayListOption.value = domainCodesArray[0];
+							domainCodesArrayListOption.text = domainCodesArray[1];
+
+							domainCodesArrayList.add(domainCodesArrayListOption);
+
+							//Add to the Branches (since domains are carried over)
+							var branchCodesArrayList = document.getElementById("ddlBranches");
+							var branchCodesArrayListOption = document.createElement("option");
+
+							branchCodesArrayListOption.value = domainCodesArray[0];
+							branchCodesArrayListOption.text = domainCodesArray[1];
+
+							branchCodesArrayList.add(branchCodesArrayListOption);
+
+							SetDomainDefault();
+						}
+					}
+                }
+            };
+			xhr.send();
+        }
+        function SetDomainDefault() {
+            document.getElementById("DomainID").value = "68";
+			document.getElementById("ddlBranches").value = "68";
+        }
+
+
+        //var sourceCodeData = ""; //Starts Empty
+        var loadDomainData = ""; //Starts Empty
+
+           var param = {};
+
+           // Initiate Search on Click
+           function initSearch() {
+               // Capture Form Field Values
+                param.NameFirstVal = document.getElementById("NameFirst").value;
+				param.NameLastVal = document.getElementById("NameLast").value;
+				param.AddressLine1Val = document.getElementById("AddressLine1").value;
+				param.AddressCityVal = document.getElementById("AddressCity").value;
+				param.AddressStateVal = document.getElementById("AddressState").value;
+				param.AddressZipVal = document.getElementById("AddressZip").value;
+				param.PhoneNumberVal = document.getElementById("PhoneNumber").value;
+				param.DomainIDVal = document.getElementById("DomainID").value;
+				param.ObjectID = document.getElementById("RefID").value;
+
+               // Create Loading Message
+               document.getElementById("searchResults").innerHTML =
+                   '<div id="search-load">' +
+                   '<img src="images/loading.gif" style="width:30px; height:30px;" />' +
+                   '<strong>Fetching your search results</strong>' +
+                   '</div>'
+
+               // Run Search
+               runSearch()
+           }
+
+           // Run Search Functions
+           function runSearch() {
+
+               var url = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/LookupLead";
+
+               // Send Data
+               var formData = {
+
+					"NameFirst": param.NameFirstVal,
+					"NameLast": param.NameLastVal,
+					"AddressLine1": param.AddressLine1Val,
+					"AddressCity": param.AddressCityVal,
+					"AddressState": param.AddressStateVal,
+					"AddressZip": param.AddressZipVal,
+					"PhoneNumber": param.PhoneNumberVal,
+					"DomainID": parseInt(param.DomainIDVal),
+					"ObjectID" : parseInt(param.ObjectID),
+					"LookupLeadSource": 0
+               };
+
+			   //alert(JSON.stringify(formData));
+
+               // AJAXY STUFF
+               xhr = new XMLHttpRequest();
+               xhr.open('POST', url, true);
+               xhr.setRequestHeader("Content-Type", "application/json");
+			   xhr.send(JSON.stringify(formData));
+
+               xhr.onreadystatechange = function () {
+                   var DONE = 4; // readyState 4 means the request is done.
+                   var OK = 200; // status 200 is a successful return.
+
+                   if (xhr.readyState === DONE) {
+                       if (xhr.status === OK)
+
+                           //console.log(this.responseText) // 'This is the returned text.'
+                       var data = JSON.parse(this.responseText);
+
+                       if (data !== undefined)
+                       {
+                           if (data.leads !== undefined)
+                           {
+                               if (data.leads && data.leads.length > 0) {
+                                   // Draw Table Header
+                                   var tableHeader = "<h1 class='search-results-title'>Search Results</h1>" +
+                                           "<table class='generalTable'>" +
+                                           "<tr><th>Owner Name</th>" +
+                                           "<th>Owner Type</th>" +
+                                           "<th>First Name</th>" +
+                                           "<th>Last Name</th>" +
+                                           "<th>Address</th>" +
+                                           "<th>City</th>" +
+                                           "<th>State</th>" +
+                                           "<th>Zip</th>" +
+                                           "<th>Type</th>" +
+                                           "<th>Source</th>" +
+                                           "<th>Source ID</th>" +
+                                           "<th>Main Phone</th>" +
+                                           "<th>Result ID</th>" +
+                                           "<th>Loan Purpose</th></tr>"
+
+                                   var tableContent = "";
+                                   var bvLink = "https://qa.thebrokernetwork.com/Prospect/WF_Prospect_BorrowerInformation.aspx?Object_ID=";
+                                   // Loop through data and Draw Table Data
+                                   // Loop through data and Draw Table Data
+                                   for (i = 0; i < data.leads.length; i++) {
+
+                                       var loanPurpose = "Other";
+
+                                       if (data.leads[i].LoanPurpose !== null) {
+                                           var loanPurpose = data.leads[i].LoanPurpose;
+
+                                           if (data.leads[i].LoanPurpose.indexOf("Refi") != -1) {
+
+                                               loanPurpose = "Refi";
+                                           } else if (data.leads[i].LoanPurpose.indexOf("Reverse") != -1) {
+
+                                               loanPurpose = "Reverse";
+                                           } else if (data.leads[i].LoanPurpose.indexOf("Purchase") != -1) {
+
+                                               loanPurpose = "Purchase";
+                                           }
+                                       }
+                                       else {
+                                           loanPurpose = "Refi";
+                                       }
+
+                                       //Sources that come in funky
+                                       data.leads[i].Source = data.leads[i].Source.split(' ').join("-");
+
+                                       /*if(data.leads[i].Source == "WIS-REFI"){
+                                           data.leads[i].Source = "WIS_REFI"
+                                       }
+
+                                       if(data.leads[i].Source == "NAF Radio-CA-WAVE--1707"){
+                                           data.leads[i].Source = "NAF-Radio-CA-WAVE--1707"
+                                       }
+
+                                       if(data.leads[i].Source == "Direct Marketing"){
+                                           data.leads[i].Source = "Direct-Marketing"
+                                       }*/
+
+                                       var address = ""
+                                       if (data.leads[i].PropertyLine1 !== null && data.leads[i].PropertyLine1 !== "") {
+
+                                           address = data.leads[i].PropertyLine1;
+                                       }
+                                       else {
+                                           address = data.leads[i].Line1;
+                                       }
+
+                                       var city = ""
+                                       if (data.leads[i].PropertyCity !== null && data.leads[i].PropertyCity !== "") {
+
+                                           city = data.leads[i].PropertyCity;
+                                       }
+                                       else {
+
+                                           city = data.leads[i].City;
+                                       }
+
+                                       var state = ""
+                                       if (data.leads[i].PropertyRegion !== null && data.leads[i].PropertyRegion !== "") {
+
+                                           state = data.leads[i].PropertyRegion;
+                                       }
+                                       else {
+
+                                           state = data.leads[i].Region;
+                                       }
+
+                                       var zipcode = ""
+                                       if (data.leads[i].PropertyPostal_Code !== null && data.leads[i].PropertyPostal_Code !== "") {
+
+                                           zipcode = data.leads[i].PropertyPostal_Code;
+                                       }
+                                       else {
+
+                                           zipcode = data.leads[i].Postal_Code;
+                                       }
+
+
+                                       tableContent = tableContent +
+                                           "<tr  class='" + data.leads[i].Type.toLowerCase() + "' ondblclick=addNewProspectDisplay('" + data.leads[i].Result_ID + "','" + data.leads[i].Type + "','" + data.leads[i].SourceID + "','" + data.leads[i].Region + "','" + loanPurpose + "','" + data.leads[i].Source + "','" + data.leads[i].CallCampaignID + "'" + ");><td>" + data.leads[i].OwnerName +
+                                           "</td><td>" + data.leads[i].Owner_Type +
+                                           "</td><td>" + data.leads[i].First_Name +
+                                           "</td><td>" + data.leads[i].Last_Name +
+                                           "</td><td>" + address +
+                                           "</td><td>" + city +
+                                           "</td><td>" + state +
+                                           "</td><td>" + zipcode +
+                                           "</td><td>" + data.leads[i].Type +
+                                           "</td><td>" + data.leads[i].Source +
+                                           "</td><td>" + data.leads[i].SourceID +
+                                           "</td><td>" + data.leads[i].Main_Phone +
+                                           "</td><td>" + "<a target='_blank' href='" + bvLink + data.leads[i].Result_ID + "'><span>" + data.leads[i].Result_ID + "</span>" +
+                                           "</td><td>" + data.leads[i].LoanPurpose
+                                       "</td></tr>";
+
+
+                                       //alert("We need to see the Call Campaign current one is " + data.leads[i].CallCampaignID);
+                                   }
+
+
+
+                                   // Draw end Table
+                                   var tableFooter = "</table>";
+
+                                   // Assemble Table
+                                   document.getElementById("searchResults").innerHTML = tableHeader + tableContent + tableFooter;
+
+                               } else {
+
+                                   // If No Results - Show Message
+                                   document.getElementById("searchResults").innerHTML =
+                                   '<div id="search-load">' +
+                                   '<strong>Your Query did not match any results</strong>' +
+                                   '</div>'
+
+                               }
+                           }
+                       }
+
+                   } else {
+                       //console.log('Nothing Returned: ' + xhr.status); // An error occurred during the request.
+                       document.getElementById("searchResults").innerHTML =
+                           '<div id="search-load">' +
+                               '<strong>Result: Nothing Found </strong>' +
+                           '</div>'
+                       //document.getElementById("searchResults").innerHTML =
+                       //    '<div id="search-load">' +
+                       //        '<strong>Result Not Found' + xhr.status + '</strong>' +
+                       //    '</div>'
+
+                   }
+               };
+           }
+
+           // Display Modal for New Prospect
+           function addNewProspectDisplay(objectID, leadSource, sourceID, leadState, leadProvider, source, callCampaignID) {
+
+				//Makes Sure this is set initially.
+				//document.getElementById("SourceCodes").diabled = false;
+               if (objectID != null) {
+
+				  //get the data for the exsiting lead
+                  GetProspectData(objectID, leadSource, sourceID, leadState, leadProvider, source, callCampaignID);
+				  //alert("inside object id not equal to null");
+
+               }
+               else {
+
+					SetPersistedDefaults();
+					//alert("inside object id not equal to null - else condition");
+					//Check if the Phone Field has a value, if so carry it over to the new lead form
+					var addManualLeadPhoneNumber = document.getElementById("PhoneNumber").value;
+
+					if(addManualLeadPhoneNumber == null || addManualLeadPhoneNumber == "")
+					{
+						//alert("No Phone Number Entered");
+					}else{
+						document.getElementById("PhoneHome").value = addManualLeadPhoneNumber;
+						//MapSourceNumber;
+					}
+
+					if(document.getElementById("infoDNIS").innerText != ''){
+
+						var hijackDNIS = document.getElementById("infoDNIS").innerText;
+						MapSourceNumber(hijackDNIS);
+					}
+               }
+
+               document.getElementById("newProspect").style.display = "block";
+           }
+
+           function addNewProspectHide() {
+               document.getElementById("newProspect").style.display = "none";
+           }
+
+
+		   var sendGroupSelection = "branch";
+
+		   function updateProspectSenderGroupChange(currentSender){
+
+				//Evaluation of what was clicked
+				if(currentSender.id == "rbBranches"){
+
+
+					document.getElementById("ddlBranches").disabled = false;
+
+					document.getElementById("rbAgent").checked = false;
+					document.getElementById("rbQueue").checked = false;
+
+
+					document.getElementById("ddlAgents").disabled = true;
+					document.getElementById("ddlQueue").disabled = true;
+
+					sendGroupSelection = "branch";
+
+				}else if(currentSender.id == "rbAgent"){
+
+					document.getElementById("ddlAgents").disabled = false;
+
+					document.getElementById("rbBranches").checked = false;
+					document.getElementById("rbQueue").checked = false;
+
+
+					document.getElementById("ddlBranches").disabled = true;
+					document.getElementById("ddlQueue").disabled = true;
+
+					sendGroupSelection = "agent";
+
+				}else if(currentSender.id == "rbQueue"){
+
+					document.getElementById("ddlQueue").disabled = false;
+
+					document.getElementById("rbBranches").checked = false;
+					document.getElementById("rbAgent").checked = false;
+
+
+					document.getElementById("ddlBranches").disabled = true;
+					document.getElementById("ddlAgents").disabled = true;
+
+					sendGroupSelection = "queue";
+				}
+		   }
+
+		   function MapSourceNumber(dnis){
+
+				dnisPhoneNumber  = dnis;//document.getElementById("infoDNIS").value;
+
+				//alert("dnis number is " + dnisPhoneNumber);
+
+				if(dnisPhoneNumber != 0){
+
+					//alert("Phone Number" + dnisPhoneNumber);
+
+				    var getTemplateIDByPhoneNumberUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetTemplateIDByPhoneNumber?phoneNumber=" + dnisPhoneNumber;
+					var objAttendantProfileTemplate = new Object();
+
+					xhr = new XMLHttpRequest();
+					xhr.open('GET', getTemplateIDByPhoneNumberUrl, true);
+					xhr.setRequestHeader("Content-Type", "application/json");
+					xhr.send();
+
+					xhr.onreadystatechange = function () {
+						var DONE = 4; // readyState 4 means the request is done.
+						var OK = 200; // status 200 is a successful return.
+
+						if (xhr.readyState === DONE) {
+							if (xhr.status === OK)
+
+							//console.log(this.responseText) // 'This is the returned text.'
+							data = JSON.parse(this.responseText);
+
+							if(data){
+
+								objAttendantProfileTemplate.PhoneNumber = data.ProfilePhoneNumber;
+							    objAttendantProfileTemplate.Name = data.ProfileName;
+							    objAttendantProfileTemplate.TemplateID = data.ProfileID;
+							    objAttendantProfileTemplate.IsActive = data.ProfileIsActive;
+
+							    //alert("Template ID " + objAttendantProfileTemplate.TemplateID);
+
+								if(objAttendantProfileTemplate.TemplateID !== null){
+									SetSourceCode(objAttendantProfileTemplate);
+								}
+								else{
+									document.getElementById("SourceCodes").disabled = false;
+								}
+							}
+						}
+					};
+				}
+			}
+
+			function SetSourceCode(objAttendantProfileTemplate)
+			{
+			    var getSourceCodeByTemplateIDUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetSourceIDByTemplateID?templateID=" + objAttendantProfileTemplate.TemplateID;
+				var sourceCode = 0;
+
+				xhr = new XMLHttpRequest();
+				xhr.open('GET', getSourceCodeByTemplateIDUrl, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
+				xhr.send();
+
+				//alert("calling source code");
+
+				xhr.onreadystatechange = function(){
+
+					var DONE = 4;
+					var OK = 200;
+
+					if(xhr.readyState === DONE){
+						if(xhr.status === OK){
+
+							console.log(this.responseText);
+							sourceCode = JSON.parse(this.responseText);
+
+							//alert("source code is " + sourceCode);
+
+							if(sourceCode !== 0){
+
+								SetSourceByCode(sourceCode);
+							}else{
+								document.getElementById("SourceCodes").disabled = false;
+							}
+						}
+					}
+				};
+			}
+
+			function SetSourceByCode(sourceCode){
+
+				var sourceCodeList = document.getElementById("SourceCodes");
+				var exist = false;
+
+				for(i = 0; i <= sourceCodeList.options.length - 1; i++){
+
+					if(sourceCodeList.options[i].value == sourceCode){
+						sourceCodeList.options[i].selected = true;
+						exist = true;
+						break;
+					}
+				}
+
+
+				if(exist === false){
+
+					alert("DNIS was not match, possible disabled source code, allowing free select.")
+					document.getElementById("SourceCodes").disabled = false;
+				}else{
+					document.getElementById("SourceCodes").disabled = true;
+				}
+			}
+
+          function GetProspectData(objectID, leadSource, sourceID, leadState, leadProvider, source, callCampaignID) {
+                 //Mapping from IM Lead Source
+            var leadSourceValue = "" //Manual
+
+            if (leadSource != null) {
+
+                if (leadSource.toLowerCase() == "internal") {
+
+                    leadSourceValue = "1";
+					document.getElementById("bvLeadSourceEnum").value = 1;
+
+                } else if (leadSource.toLowerCase() == "inactive") {
+
+                    leadSourceValue = "1";
+					document.getElementById("bvLeadSourceEnum").value = 1;
+
+                } else if (leadSource.toLowerCase() == "departed") {
+
+                    leadSourceValue = "1";
+					document.getElementById("bvLeadSourceEnum").value = 1;
+
+                } else if (leadSource.toLowerCase() == "data") {
+
+                    //leadSourceValue = "2";
+					leadSourceValue = "2";
+					document.getElementById("bvLeadSourceEnum").value = 2;
+					document.getElementById("bvDataResultID").value = objectID;
+
+                } else if (leadSource.toLowerCase() == "manual") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+
+                } else if (leadSource.toLowerCase() == "radio") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+                    //Need to select Radio Tab (In New Lead Modal)
+
+                } else if (leadSource.toLowerCase() == "googlephone") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+
+                } else if (leadSource.toLowerCase() == "adwordsctc") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+                    //Set Source Code to 1389478
+
+                } else if (leadSource.toLowerCase() == "bridgebilt") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+                    //Set Source Code to 1490016
+
+                } else if (leadSource.toLowerCase() == "stanfield") {
+
+                    leadSourceValue = "4";
+					document.getElementById("bvLeadSourceEnum").value = 4;
+                    //Set Source Code to 857557
+                } else if(leadSource.toLowerCase() == "leadimport"){
+
+                    //Treat Lead Import like Marketing DATA
+                    leadSourceValue = "5";
+                    document.getElementById("bvLeadSourceEnum").value = 5;
+                    document.getElementById("bvDataResultID").value = objectID;
+                }
+                else {
+					document.getElementById("bvLeadSourceEnum").value = 1;
+                }
+            }
+
+            var url = "";
+            if (leadSourceValue != null) {
+
+                url = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLeadDataV2?LeadID=" + objectID + "&LeadSource=" + leadSourceValue;
+
+            }
+            else {
+
+                url = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLeadDataV2?LeadID=" + objectID + "&LeadSource=1";
+
+            }
+
+               // AJAXY STUFF
+               xhr = new XMLHttpRequest();
+               xhr.open('GET', url, false);
+               xhr.setRequestHeader("Content-Type", "application/json");
+
+               xhr.onreadystatechange = function () {
+                   var DONE = 4; // readyState 4 means the request is done.
+                   var OK = 200; // status 200 is a successful return.
+
+                   if (xhr.readyState === DONE) {
+                       if (xhr.status === OK)
+
+                           console.log(this.responseText) // 'This is the returned text.'
+                       var data = JSON.parse(this.responseText);
+					   //alert("setting fields from response " + this.responseText);
+                       if (data) {
+                           document.getElementById("firstName").value = data.NameFirst;
+                           document.getElementById("middleName").value = data.NameMiddle;
+                           document.getElementById("lastName").value = data.NameLast;
+
+                           //Property Address Has Priority, Mailing is Set as Secondary
+                           if (data.PropertyLine1 !== null && data.PropertyLine1 !== "") {
+                               document.getElementById("newLeadAddressLine1").value = data.PropertyLine1;
+                           } else {
+                               document.getElementById("newLeadAddressLine1").value = data.AddressLine1;
+                           }
+
+                           //Property City Has Priority, Mailing City is Set as Secondary
+                           if (data.PropertyCity) {
+                               document.getElementById("newLeadAddressCity").value = data.PropertyCity;
+                           } else {
+                               document.getElementById("newLeadAddressCity").value = data.AddressCity;
+                           }
+
+                           //document.getElementById("newLeadState").value = data.AddressState;
+						   var actualState = "";
+						   var tempStateName = "";
+
+                           //Property has priority
+						   if (data.PropertyRegion !== null) {
+
+						       tempStateName = data.PropertyRegion.split('_');
+
+						   } else if (data.AddressState !== null) {
+
+						       tempStateName = data.AddressState.split('_');
+						   }
+
+						   if(tempStateName.length == 2){
+
+							//Outbound
+							//alert("Current State is " + tempStateName[1]);
+
+							var currentState = LookupStateForID(tempStateName[1]);
+							document.getElementById("newLeadState").value = currentState;
+
+							actualState = currentState;
+
+						   }else if (tempStateName.length == 3){
+
+								tempStateName = tempStateName[1] + "_" + tempStateName[2];
+
+								var currentState = LookupStateForID(tempStateName);
+								document.getElementById("newLeadState").value = currentState;
+
+								actualState = currentState;
+
+						   }else{
+							//Inbound
+							document.getElementById("newLeadState").value = data.AddressState;
+							actualState = data.AddressState; //Do we want this to default to address state?
+						   }
+
+                           //Property zip has priority
+						   if (data.PropertyPostal_Code !== null && data.PropertyPostal_Code != "") {
+
+						       document.getElementById("newLeadAddressZip").value = data.PropertyPostal_Code;
+
+						   } else {
+
+						       document.getElementById("newLeadAddressZip").value = data.AddressZip;
+						   }
+
+
+                           document.getElementById("PhoneHome").value = data.PhoneHome;
+                           document.getElementById("PhoneWork").value = data.PhoneWork;
+                           document.getElementById("PhoneCell").value = data.PhoneCell;
+
+                           document.getElementById("primaryEmail").value = data.EMail;
+                           document.getElementById("alternateEmail").value = data.EMailAlt;
+						   document.getElementById("bvProspectID").value = data.BVObjectID;
+						   document.getElementById("ddlSelectLanguage").value = data.LanguageID;
+						   document.getElementById("hidLeadNote").value = data.LeadNote;
+
+						   //Set Source Drop Down List:
+						   //alert("source type is" + sourceID);
+						   if(leadProvider == "Purchase"){
+								document.getElementById("isPurchaseLoan").checked = true;
+
+						   }else{
+							document.getElementById("isPurchaseLoan").checked = false;
+						   }
+
+						    document.getElementById("SourceCodes").value = sourceID;
+							var currentSourceCode = document.getElementById("SourceCodes").value;
+
+							if(currentSourceCode == "" || currentSourceCode == 'undefined'){
+
+								var createTempSourceNameAndCode = document.createElement('option');
+								createTempSourceNameAndCode.value = sourceID;
+								createTempSourceNameAndCode.innerHTML = source;
+
+								document.getElementById("SourceCodes").appendChild(createTempSourceNameAndCode);
+								document.getElementById("SourceCodes").value = sourceID;
+
+							}else{
+								//Allow for free-select
+							}
+
+									//Set NAF Objects
+									var isProspectDataComplete = true;
+
+
+									if(data.BVObjectID == null || data.BVObjectID == ""){
+										isProspectDataComplete = false;
+									}else{
+										document.getElementById("tagNAF_ObjectID").innerText = data.BVObjectID;
+										NAF_ObjectID = data.BVObjectID;
+									}
+
+									if(data.LoanType == null || data.LoanType == ""){
+										isProspectDataComplete = false;
+									}else {
+										document.getElementById("tagNAF_LoanType").innerText = data.LoanType;
+										NAF_LoanType = "LoanType_Conventional";
+									}
+
+									if(actualState == null || actualState == ""){
+										isProspectDataComplete = false;
+									}else{
+										document.getElementById("tagNAF_LoanState").innerText = actualState;
+										var stateName = LookupState(actualState);
+										/*<!-- alert("actual state" + actualState); -->
+										<!-- alert("actual state" + stateName); -->
+
+										<!-- alert("State name is" + data.AddressState); -->
+										<!-- alert("State name lookup is" + stateName); -->*/
+
+										NAF_LoanState = "State_" + stateName;
+									}
+
+									if (data.AddressZip == null || data.AddressZip == "") {
+									    alert("Zip Code Missing From Address");
+									    isProspectDataComplete = false;
+
+									} else {
+									    document.getElementById("tagNAF_LoanZip").innerText = data.AddressZip;
+									    NAF_LoanZip = data.AddressZip;
+									}
+
+									if(data.LoanPurpose == null || data.LoanPurpose == ""){
+										isProspectDataComplete = false;
+									}else{
+
+										var loanPurposeName = data.LoanPurpose;
+										//alert("LoanPurpose Name " + loanPurposeName);
+										//alert("Lead Provider Name " + leadProvider);
+
+										if(data.LoanPurpose == 10 ){
+											loanPurposeName = "Purchase";
+
+										}else{
+											loanPurposeName = "Refi";
+										}
+
+										document.getElementById("tagNAF_LoanPurpose").innerText = data.LoanPurpose;
+										NAF_LoanPurpose = "LoanPurpose_" + leadProvider;
+									}
+
+									if(data.SourceType == null || data.SourceType == ""){
+										//Do Nothing
+									}else{
+
+										NAF_LoanSource = "SourceType_" + data.SourceType;
+										//alert("NAF Source Type is " + NAF_LoanSource);
+									}
+
+									//alert("Get Prospect Data Call, Validating Logic for Call Campaign Pass through, Prior to send off." + callCampaignID)
+									//Override for NAF Source Type (Retention - Triggers and Payoff)
+									if(callCampaignID == null || callCampaignID == ""){
+
+									//alert("No value for call campaign, something went wrong here..");
+										//No Override, default behavior from data.SourceType
+									}else{
+
+										//alert("call camapaing contains a value here it is " + callCampaignID);
+										if(callCampaignID == 10021 || callCampaignID == 10022){
+
+										NAF_LoanSource = "SourceType_EPO";
+
+										}
+									}
+
+                       } else {
+
+                           // If No Results - Show Message
+                           document.getElementById("searchResults").innerHTML =
+                           '<div id="search-load">' +
+                           '<strong>Your Query did not match any results</strong>' +
+                           '</div>'
+
+                       }
+                   } else {
+                       console.log('Error: ' + xhr.status); // An error occurred during the request.
+
+                       document.getElementById("searchResults").innerHTML =
+                           '<div id="search-load">' +
+                               '<strong>Error' + xhr.status + '</strong>' +
+                           '</div>'
+
+                   }
+               };
+               xhr.send(null);
+
+          }
+
+			function validateForm() {
+			  var complete = true
+
+			  if(validatorOverrider == false)
+			  {
+
+					var firstname = document.getElementById("firstName").value; //FIRSTNAME.value;
+					var lastname = document.getElementById("lastName").value; //LASTNAME.value;
+
+					var newleadstate = '';
+					var newLeadStateIndex = document.getElementById("newLeadState").selectedIndex;
+
+					if(newLeadStateIndex !== -1){
+
+						newleadstate = document.getElementById("newLeadState").options[document.getElementById("newLeadState").selectedIndex].value;
+					}
+
+
+					var homephone = document.getElementById("PhoneHome").value;
+					var workphone = document.getElementById("PhoneWork").value;
+					var cellphone = document.getElementById("PhoneCell").value;
+					var zipCode = document.getElementById("newLeadAddressZip").value;
+
+
+					var sourceCodeIndex = document.getElementById("SourceCodes").selectedIndex;
+					var sourceCode = ""
+
+					if(sourceCodeIndex !== -1){
+						sourceCode = document.getElementById("SourceCodes").options[document.getElementById("SourceCodes").selectedIndex].index;
+						//document.getElementById("SourceCodes").style.background = '#ffffff'
+						//alert("Source Code  Matched. Validation Set to Green (Inside Source Code Index Check)");
+					}
+
+					if (firstname === null || firstname === "") {
+						document.getElementById("firstName").style.background = '#f27464'
+						complete = false
+					}
+					else {
+						document.getElementById("firstName").style.background = '#ffffff'
+					}
+
+					if (lastname === null || lastname === "") {
+						document.getElementById("lastName").style.background = '#f27464'
+						complete = false
+					}
+					else {
+						document.getElementById("lastName").style.background = '#ffffff'
+					}
+
+					if (newleadstate === null || newleadstate === "") {
+						document.getElementById("newLeadState").style.background = '#f27464'
+						complete = false
+					}
+					else {
+						document.getElementById("newLeadState").style.background = '#ffffff'
+					}
+
+					if (zipCode === null || zipCode === ""){
+						document.getElementById("newLeadAddressZip").style.background = '#f27464'
+						complete = false;
+					}else{
+						document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+					}
+
+					if(sourceCode === null || sourceCode === "" || sourceCode === 0){
+						document.getElementById("SourceCodes").style.background = '#f27464'
+						complete = false;
+						//alert("Source Code Not Matched. Validation Set to Red");
+					}else{
+						document.getElementById("SourceCodes").style.background = '#ffffff'
+						//alert("Source Code  Matched. Validation Set to Green");
+					}
+
+					if (firstname === null || firstname === "" || lastname === null || lastname === "" || newleadstate === "" || newleadstate === null) {
+						// return false;
+					}
+
+					if ((homephone !== "" && homephone !== null) || (workphone !== "" && workphone !== null) || (cellphone !== "" && cellphone !== null)) {
+
+					} else {
+
+						if (homephone === null || homephone === "") {
+							document.getElementById("PhoneHome").style.background = '#f27464'
+							complete = false
+						}
+						else {
+							document.getElementById("PhoneHome").style.background = '#ffffff'
+						}
+
+						if (workphone === null || workphone === "") {
+							document.getElementById("PhoneWork").style.background = '#f27464'
+							complete = false
+						}
+						else {
+							document.getElementById("PhoneWork").style.background = '#ffffff'
+						}
+
+						if (cellphone === null || cellphone === "") {
+							document.getElementById("PhoneCell").style.background = '#f27464'
+							complete = false
+						}
+						else {
+							document.getElementById("PhoneCell").style.background = '#ffffff'
+						}
+
+						return false;
+					}
+
+
+					//route determined
+					var sendLogicObject = {
+						sendRoute: "",
+						sendSelection: ""
+
+					}
+
+					//Set Object Values
+					updateProspectSenderGroupChange
+					sendLogicObject.sendRoute = sendGroupSelection;
+					if(sendLogicObject.sendRoute ===  ""){
+
+						sendRoute = "branch";
+					}
+
+					sendLogicObject.sendSelection = GetSendRouteSelection(sendLogicObject.sendRoute);
+					if(sendLogicObject.sendRoute === null || sendLogicObject.sendRoute === ""){
+
+						//alert("Lead Cannot Be Created Unless Route and Selection is Made")
+						document.getElementById("ddlBranches").style.background = '#f27464'
+						document.getElementById("ddlAgents").style.background = '#f27464'
+						document.getElementById("ddlQueue").style.background = '#f27464'
+						complete = false;
+
+					}else{
+
+
+						document.getElementById("ddlBranches").style.background = '#ffffff'
+						document.getElementById("ddlAgents").style.background = '#ffffff'
+						document.getElementById("ddlQueue").style.background = '#ffffff'
+
+					}
+
+					//Transfer Event
+					if (complete) {
+
+						var object_id = document.getElementById("bvProspectID").value
+
+						//Validation
+						if (object_id != null && object_id != 0) {
+							//alert("updating the lead");
+							//alert("Updating Lead, Object ID is " + object_id);
+							UpdateLead(object_id, sendLogicObject);
+						} else {
+							//alert("creating the lead");
+							CreateLead(sendLogicObject, sendLogicObject);
+						}
+					}
+				}else{
+					//Outbound call will have the values needed to transfer.  Need to test this flow on Tuesday.
+					fncTransfer();
+				}
+			}
+
+			function GetSendRouteSelection(sendRoute){
+
+				var senderSelectionText = "";
+				var senderSelectionValue = "";
+
+				if(sendRoute === "branch"){
+
+					senderSelection = document.getElementById("ddlBranches").options[document.getElementById("ddlBranches").selectedIndex].text;
+					senderSelectionValue = document.getElementById("ddlBranches").options[document.getElementById("ddlBranches").selectedIndex].value;
+
+					//alert("Branch Select is " + senderSelection + " Value is " + senderSelectionValue);
+
+				}else if(sendRoute === "agent"){
+
+
+					senderSelection = document.getElementById("ddlAgents").options[document.getElementById("ddlAgents").selectedIndex].text;
+					senderSelectionValue = document.getElementById("ddlAgents").options[document.getElementById("ddlAgents").selectedIndex].value;
+
+					//alert("Agent Select is " + senderSelection + " Value is " + senderSelectionValue);
+
+				}else if(sendRoute === "queue"){
+
+
+					senderSelection = document.getElementById("ddlQueue").options[document.getElementById("ddlQueue").selectedIndex].text;
+					senderSelectionValue = document.getElementById("ddlQueue").options[document.getElementById("ddlQueue").selectedIndex].value;
+
+					//alert("Queue Select is " + senderSelection + " Value is " + senderSelectionValue);
+
+				}else{
+
+					alert("No Send Route Selected ");
+				}
+
+				return senderSelectionValue;
+			}
+
+
+
+		function validateFormFields(){
+
+			var firstname = document.getElementById("firstName").value; //FIRSTNAME.value;
+			var lastname = document.getElementById("lastName").value; //LASTNAME.value;
+			var newleadstate = document.getElementById("newLeadState").options.namedItem.selected = true;
+			var homephone = document.getElementById("PhoneHome").value;
+			var workphone = document.getElementById("PhoneWork").value;
+			var cellphone = document.getElementById("PhoneCell").value;
+			var zipCode = document.getElementById("newLeadAddressZip").value;
+
+			if (firstname === null || firstname === "") {
+				document.getElementById("firstName").style.background = '#f27464'
+				complete = false
+			}
+			else {
+				document.getElementById("firstName").style.background = '#ffffff'
+			}
+
+			if (lastname === null || lastname === "") {
+				document.getElementById("lastName").style.background = '#f27464'
+				complete = false
+			}
+			else {
+				document.getElementById("lastName").style.background = '#ffffff'
+			}
+			if (newleadstate === null || newleadstate === "") {
+				document.getElementById("newLeadState").style.background = '#f27464'
+				complete = false
+			}
+			else {
+				document.getElementById("newLeadState").style.background = '#ffffff'
+			}
+			if(zipCode === null || zipCode === ""){
+
+				document.getElementById("newLeadAddressZip").style.background = '#f27464'
+				complete = validateZipCode(zipCode);
+				if(complete == false){
+					document.getElementById("newLeadAddressZip").style.background = '#f27464'
+
+				}else{
+					document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+				}
+
+			}else{
+
+				document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+				complete = validateZipCode(zipCode);
+
+				if(complete == false){
+					document.getElementById("newLeadAddressZip").style.background = '#f27464'
+
+				}else{
+					document.getElementById("newLeadAddressZip").style.background = '#ffffff'
+				}
+			}
+			if (firstname === null || firstname === "" || lastname === null || lastname === "" || newleadstate === "" || newleadstate === null) {
+					// return false;
+			}
+
+			if ((homephone !== "" && homephone !== null) || (workphone !== "" && workphone !== null) || (cellphone !== "" && cellphone !== null)) {
+			} else {
+
+				if (homephone === null || homephone === "") {
+					document.getElementById("PhoneHome").style.background = '#f27464'
+					complete = false
+				}
+				else {
+					document.getElementById("PhoneHome").style.background = '#ffffff'
+				}
+
+				if (workphone === null || workphone === "") {
+					document.getElementById("PhoneWork").style.background = '#f27464'
+					complete = false
+				}
+				else {
+					document.getElementById("PhoneWork").style.background = '#ffffff'
+				}
+				if (cellphone === null || cellphone === "") {
+					document.getElementById("PhoneCell").style.background = '#f27464'
+					complete = false
+				}
+				else {
+					document.getElementById("PhoneCell").style.background = '#ffffff'
+				}
+
+				return false;
+
+			}
+		}
+
+		function validateZipCode(zipEntry){
+
+			var regex = /^(\d{5})?$/;
+			return regex.test(zipEntry);
+
+		}
+
+        function CreateLead(sendLogicObject, sendObject) {
+
+			/*alert("Send Object route is " + sendObject.sendRoute);
+			alert("Send Object selection is " + sendObject.sendSelection);*/
+
+			//Currently we are only supporting two languages Eng and Spn (when we expand, we will need to re-work this)
+			var languageID = 0;
+			var selectedLangauge = document.getElementById("ddlSelectLanguage").options[document.getElementById("ddlSelectLanguage").selectedIndex].value;
+
+			if(languageID == "1"){
+				languageID = 1
+			}
+
+			var loanPurpose = 10;	//Unkown (This could only happen if the "isPurchase" checkbox is removed, not likely but could happen.)
+
+			if(document.getElementById("isPurchaseLoan").checked == true){
+				loanPurpose = 10;
+			}else if
+			(document.getElementById("isPurchaseLoan").checked == false){
+				loanPurpose = 20; //Refinance
+			}
+
+			var leadSourceID = document.getElementById("bvLeadSourceEnum").value;
+
+			if(leadSourceID == null){
+				leadSourceID = 1;
+			}
+
+
+			//Handles the Data Lead's
+			var leadID = 0;
+			var dataResultID = document.getElementById("bvDataResultID").value;
+
+			if(dataResultID == null){
+
+				leadID = 0;
+			}else{
+
+				leadID = parseInt(dataResultID);
+				//alert("Data result id is " + leadID);
+			}
+
+			//Set Agent ID
+			var ContactOwnerID = document.getElementById("tagBVAgentID").textContent;
+			//alert("Agent Object ID " + ContactOwnerID);
+
+			if(ContactOwnerID == '' || ContactOwnerID == 'undefined'){
+				ContactOwnerID = 1413635;
+			}
+
+			//alert("Agent Object ID " + ContactOwnerID);
+
+            //Prospect Data
+            var INLeadInfo = {
+
+				"LeadID" : leadID,
+                "NameFirst": document.getElementById("firstName").value,
+                "NameMiddle": document.getElementById("middleName").value,
+                "NameLast": document.getElementById("lastName").value,
+                "AddressLine1": document.getElementById("newLeadAddressLine1").value,
+                "AddressCity": document.getElementById("newLeadAddressCity").value,
+                "AddressState": document.getElementById("newLeadState").options[document.getElementById("newLeadState").selectedIndex].value,
+                "AddressZip": document.getElementById("newLeadAddressZip").value,
+
+                "PropertyLine1": document.getElementById("newLeadAddressLine1").value,
+                "PropertyCity": document.getElementById("newLeadAddressCity").value,
+                "PropertyRegion": document.getElementById("newLeadState").options[document.getElementById("newLeadState").selectedIndex].value,
+                "PropertyPostal_Code": document.getElementById("newLeadAddressZip").value,
+
+                "PhoneWork": document.getElementById("PhoneWork").value,
+                "PhoneHome": document.getElementById("PhoneHome").value,
+                "PhoneCell": document.getElementById("PhoneCell").value,
+                "EMail": document.getElementById("primaryEmail").value,
+                "EMailAlt": document.getElementById("alternateEmail").value,
+                "SourceID": parseInt(document.getElementById("SourceCodes").value),
+                "IsTest": document.getElementById("IsTestLead").checked,
+				"LoanPurpose" : loanPurpose,
+				"LoanType" : 1,
+				"LanguageID" : languageID,
+				"ProspectNote": document.getElementById("txtProspectNote").value,
+				"LeadNote": document.getElementById("hidLeadNote").value,
+				"InboundDNISSourcingPhoneNumber": dnisPhoneNumber,
+				"DomainID": 68,
+				"BVObjectID" : 0,
+				"ProspectTypeID": 1,
+				"ContactOwnerID" : ContactOwnerID,
+				"LeadSource" : leadSourceID
+            };
+
+            if (INLeadInfo != null) {
+
+                var createProspectCallSuccess = false;
+
+                if (INLeadInfo.NameFirst != null && INLeadInfo.NameLast != null &&
+                    (INLeadInfo.PhoneHome != null || INLeadInfo.PhoneCell != null || INLeadInfo.PhoneWork != null) &&
+                    (INLeadInfo.AddressState != null && INLeadInfo.SourceID != null)) {
+
+                    //Construct Prospect Create Call
+                    var createProspectUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/CreateProspectV2";
+
+                    xhr = new XMLHttpRequest();
+                    xhr.open('POST', createProspectUrl, true);
+					xhr.setRequestHeader("Content-Type", "application/json");
+					xhr.send(JSON.stringify(INLeadInfo));
+
+                    xhr.onreadystatechange = function () {
+
+                        var DONE = 4;
+                        var SUCCESS = 200;
+
+                        //validate the response text
+                        if (xhr.readyState == DONE) {
+
+                            if (xhr.status == SUCCESS) {
+
+                                INLeadInfo = JSON.parse(this.responseText);
+                                createProspectCallSuccess = true;
+
+								if(INLeadInfo === null)
+								{
+									alert("There was no prospect returned.  Please try again.");
+								}
+								else{
+
+									//Set NAF Objects
+									var isProspectDataComplete = true;
+
+
+									if(INLeadInfo.BVObjectID == null || INLeadInfo.BVObjectID == ""){
+										isProspectDataComplete = false;
+									}else{
+										document.getElementById("tagNAF_ObjectID").innerText = INLeadInfo.BVObjectID;
+										NAF_ObjectID = INLeadInfo.BVObjectID;
+
+										document.getElementById("bvProspectID").value = NAF_ObjectID;
+									}
+
+									if(INLeadInfo.LoanType == null || INLeadInfo.LoanType == ""){
+										isProspectDataComplete = false;
+									}else {
+										document.getElementById("tagNAF_LoanType").innerText = INLeadInfo.LoanType;
+										NAF_LoanType = "LoanType_Conventional";
+									}
+
+                                    //PROPERTY CHANGED ADDRESS//
+									if (INLeadInfo.PropertyRegion == null || INLeadInfo.PropertyRegion == "") {
+
+									    if (INLeadInfo.AddressState == null || INLeadInfo.AddressState == "") {
+									        isProspectDataComplete = false;
+									    } else
+									    {
+									        document.getElementById("tagNAF_LoanState").innerText = INLeadInfo.AddressState;
+									        var stateName = LookupState(INLeadInfo.AddressState);
+
+									        NAF_LoanState = "State_" + stateName;
+									    }
+
+									}else{
+									    document.getElementById("tagNAF_LoanState").innerText = INLeadInfo.PropertyRegion;
+										var stateName = LookupState(INLeadInfo.PropertyRegion);
+
+										NAF_LoanState = "State_" + stateName;
+									}
+
+									if (INLeadInfo.AddressZip == null || INLeadInfo.AddressZip == "") {
+									    isProspectDataComplete = false;
+									    alert("Missing Zip for Create Lead Process");
+									} else {
+									    NAF_LoanZip = INLeadInfo.AddressZip;
+									}
+
+									if(INLeadInfo.LoanPurpose == null || INLeadInfo.LoanPurpose == ""){
+										isProspectDataComplete = false;
+									}else{
+
+										var loanPurposeName = INLeadInfo.LoanPurpose;
+										if(INLeadInfo.LoanPurpose == 10 ){
+											loanPurposeName = "Purchase";
+
+										}else{
+											loanPurposeName = "Refi";
+										}
+
+										document.getElementById("tagNAF_LoanPurpose").innerText = INLeadInfo.LoanPurpose;
+										NAF_LoanPurpose = "LoanPurpose_" + loanPurposeName;
+									}
+
+									//alert("NAF_ObjectID IS" + NAF_ObjectID);
+									//alert("NAF_LoanType IS" + NAF_LoanType);
+									//alert("NAF_LoanState IS" + NAF_LoanState);
+									//alert("NAF_LoanPurpose IS" + NAF_LoanPurpose);
+
+									//alert("Create prospect success is " + createProspectCallSuccess);
+									if (createProspectCallSuccess) {
+
+										//alert("Successfully created prospect!");
+
+										if(isProspectDataComplete){
+
+											if(sendObject.sendRoute === "branch"){
+
+												fncTransfer();
+												//TransferToAgent(INLeadInfo, sendObject);
+
+											}else if(sendObject.sendRoute === "agent"){
+
+												//alert("transferring to agent for create.");
+												TransferToAgent(INLeadInfo, sendObject);
+
+											}else if(sendObject.sendRoute === "queue"){
+
+												alert("transfering to queue for create.");
+												TransferToQueue(INLeadInfo, sendObject);
+
+											}else{
+
+												//Default Behavior fncTransfer()
+												//alert("default inbound transfer");
+												fncTransfer();
+												//TransferToAgent(INLeadInfo, sendObject);
+											}
+										}else{
+											alert("There was an error processing this prospect form data.");
+										}
+									}
+								}
+                            }
+                        }
+                    };
+
+
+                }
+                else { alert("create prospect could not be created, form data validation fail"); }
+            }
+            else { alert("form validation is null"); }
+        }
+
+		function TransferToAgent(INLeadInfo, sendLogicObject){
+
+			var transferAgentID = document.getElementById("tagAgentID").value;
+
+			if(transferAgentID == null || transferAgentID == 'undefined')
+			{
+				transferAgentID = 1413635;
+			}
+
+			var transferAgentProspect = {
+
+				ProspectID: parseInt(INLeadInfo.BVObjectID),
+				NewOwner: parseInt(sendLogicObject.sendSelection),
+				TransferringAgentID : parseInt(transferAgentID)
+			}
+
+			var transferProspectToAgentUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/TransferProspectV2?ProspectID=" + transferAgentProspect.ProspectID + "&NewOwner=" + transferAgentProspect.NewOwner + "&TransferringAgentID=" + transferAgentProspect.TransferringAgentID;
+
+			xhr = new XMLHttpRequest();
+			xhr.open('GET', transferProspectToAgentUrl, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send();
+
+			xhr.onreadystatechange = function () {
+
+				var DONE = 4;
+				var SUCCESS = 200;
+
+				//validate the response text
+				if (xhr.readyState == DONE) {
+
+					if (xhr.status == SUCCESS) {
+
+
+						var transferSuccess = this.responseText;
+
+						if(transferSuccess == "true"){
+
+							//alert("Transfer to agent successful.  Please close the New Prospect Modal.");
+
+						}else if(transferSuccess == "false"){
+
+							alert("Transfer failed. Please try again");
+						}else{
+							alert("Transfer did not respond back from server.");
+						}
+					}
+				}
+			};
+		}
+
+		function TransferToQueue(INLeadInfo, sendLogicObject){
+
+			var transferAgentID = document.getElementById("tagAgentID").value;
+
+			if(transferAgentID == null || transferAgentID == 'undefined')
+			{
+				transferAgentID = 1413635;
+			}
+
+			if(sendLogicObject.sendSelection == "0" || sendLogicObject.sendSelection == 0){
+
+				//Default  Place in Overnight Queue
+				sendLogicObject.sendSelection = 536238;
+			}
+
+
+			var transferQueueProspect = {
+
+				ProspectID: parseInt(INLeadInfo.BVObjectID),
+				NewOwner: parseInt(sendLogicObject.sendSelection),
+				TransferringAgentID : parseInt(transferAgentID)
+			}
+
+			var transferProspectToAgentUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/TransferProspectV2?ProspectID=" + transferQueueProspect.ProspectID + "&NewOwner=" + transferQueueProspect.NewOwner + "&TransferringAgentID=" + transferQueueProspect.TransferringAgentID;
+
+			xhr = new XMLHttpRequest();
+			xhr.open('GET', transferProspectToAgentUrl, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send();
+
+			xhr.onreadystatechange = function () {
+
+				var DONE = 4;
+				var SUCCESS = 200;
+
+				//validate the response text
+				if (xhr.readyState == DONE) {
+
+					if (xhr.status == SUCCESS) {
+
+
+						var transferSuccess = this.responseText;
+
+						if(transferSuccess == "true"){
+
+							alert("Transfer to queue successful.  Please close the New Prospect Modal.");
+
+						}else if(transferSuccess == "false"){
+
+							alert("Transfer failed. Please try again");
+						}else{
+							alert("Transfer did not respond back from server.");
+						}
+					}
+				}
+			};
+		}
+
+		function LookupStateForID(stateName){
+
+				if(stateName.toLowerCase() == "alabama"){return "AL";}
+				if(stateName.toLowerCase() == "arizona"){return "AZ";}
+				if(stateName.toLowerCase() == "arkansas"){return "AR";}
+				if(stateName.toLowerCase() == "Alaska"){return "AK";}
+				if(stateName.toLowerCase() == "california"){return "CA";}
+				if(stateName.toLowerCase() == "colorado"){return "CO";}
+				if(stateName.toLowerCase() == "connecticut"){return "CT";}
+				if(stateName.toLowerCase() == "delaware"){return "de";}
+				if(stateName.toLowerCase() == "district_of_columbia"){return "DC";}
+				if(stateName.toLowerCase() == "florida"){return "FL";}
+				if(stateName.toLowerCase() == "georgia"){return "GA";}
+				if(stateName.toLowerCase() == "hawaii"){return "HI";}
+				if(stateName.toLowerCase() == "idaho"){return "ID";}
+				if(stateName.toLowerCase() == "illinois"){return "IL";}
+				if(stateName.toLowerCase() == "indiana"){return "IN";}
+				if(stateName.toLowerCase() == "iowa"){return "IA";}
+				if(stateName.toLowerCase() == "kansas"){return "KS";}
+				if(stateName.toLowerCase() == "kentucky"){return "KY";}
+				if(stateName.toLowerCase() == "louisiana"){return "LA";}
+				if(stateName.toLowerCase() == "maine"){return "ME";}
+				if(stateName.toLowerCase() == "maryland"){return "MD";}
+				if(stateName.toLowerCase() == "massachusetts"){return "MA";}
+				if(stateName.toLowerCase() == "michigan"){return "MI";}
+				if(stateName.toLowerCase() == "minnesota"){return "MN";}
+				if(stateName.toLowerCase() == "mississippi"){return "MS";}
+				if(stateName.toLowerCase() == "missouri"){return "MO";}
+				if(stateName.toLowerCase() == "montana"){return "MT";}
+				if(stateName.toLowerCase() == "nebraska"){return "NE";}
+				if(stateName.toLowerCase() == "nevada"){return "NV";}
+				if(stateName.toLowerCase() == "new_hampshire"){return "NH";}
+				if(stateName.toLowerCase() == "new_jersey"){return "NJ";}
+				if(stateName.toLowerCase() == "new_mexico"){return "NM";}
+				if(stateName.toLowerCase() == "new_york"){return "NY";}
+				if(stateName.toLowerCase() == "north_carolina"){return "NC";}
+				if(stateName.toLowerCase() == "north_dakota"){return "ND";}
+				if(stateName.toLowerCase() == "ohio"){return "OH";}
+				if(stateName.toLowerCase() == "oklahoma"){return "OK";}
+				if(stateName.toLowerCase() == "oregon"){return "OR";}
+				if(stateName.toLowerCase() == "pennsylvania"){return "PA";}
+				if(stateName.toLowerCase() == "rhode_island"){return "RI";}
+				if(stateName.toLowerCase() == "south_carolina"){return "SC";}
+				if(stateName.toLowerCase() == "south_dakota"){return "SD";}
+				if(stateName.toLowerCase() == "tennessee"){return "TN";}
+				if(stateName.toLowerCase() == "texas"){return "TX";}
+				if(stateName.toLowerCase() == "utah"){return "UT";}
+				if(stateName.toLowerCase() == "vermont"){return "VT";}
+				if(stateName.toLowerCase() == "virginia"){return "VA";}
+				if(stateName.toLowerCase() == "washington"){return "WA";}
+				if(stateName.toLowerCase() == "west_virginia"){return "WV";}
+				if(stateName.toLowerCase() == "wisconsin"){return "WI";}
+				if(stateName.toLowerCase() == "wyoming"){return "WY";}
+		}
+		function LookupState(stateName){
+
+				if(stateName.toLowerCase() == "al"){return "Alabama";}
+				if(stateName.toLowerCase() == "az"){return "Arizona";}
+				if(stateName.toLowerCase() == "ar"){return "Arkansas";}
+				if(stateName.toLowerCase() == "ak"){return "Alaska";}
+				if(stateName.toLowerCase() == "ca"){return "California";}
+				if(stateName.toLowerCase() == "co"){return "Colorado";}
+				if(stateName.toLowerCase() == "ct"){return "Connecticut";}
+				if(stateName.toLowerCase() == "de"){return "Delaware";}
+				if(stateName.toLowerCase() == "dc"){return "District_Of_Columbia";}
+				if(stateName.toLowerCase() == "fl"){return "Florida";}
+				if(stateName.toLowerCase() == "ga"){return "Georgia";}
+				if(stateName.toLowerCase() == "hi"){return "Hawaii";}
+				if(stateName.toLowerCase() == "id"){return "Idaho";}
+				if(stateName.toLowerCase() == "il"){return "Illinois";}
+				if(stateName.toLowerCase() == "in"){return "Indiana";}
+				if(stateName.toLowerCase() == "ia"){return "Iowa";}
+				if(stateName.toLowerCase() == "ks"){return "Kansas";}
+				if(stateName.toLowerCase() == "ky"){return "Kentucky";}
+				if(stateName.toLowerCase() == "la"){return "Louisiana";}
+				if(stateName.toLowerCase() == "me"){return "Maine";}
+				if(stateName.toLowerCase() == "md"){return "Maryland";}
+				if(stateName.toLowerCase() == "ma"){return "Massachusetts";}
+				if(stateName.toLowerCase() == "mi"){return "Michigan";}
+				if(stateName.toLowerCase() == "mn"){return "Minnesota";}
+				if(stateName.toLowerCase() == "ms"){return "Mississippi";}
+				if(stateName.toLowerCase() == "mo"){return "Missouri";}
+				if(stateName.toLowerCase() == "mt"){return "Montana";}
+				if(stateName.toLowerCase() == "ne"){return "Nebraska";}
+				if(stateName.toLowerCase() == "nv"){return "Nevada";}
+				if(stateName.toLowerCase() == "nh"){return "New_Hampshire";}
+				if(stateName.toLowerCase() == "nj"){return "New_Jersey";}
+				if(stateName.toLowerCase() == "nm"){return "New_Mexico";}
+				if(stateName.toLowerCase() == "ny"){return "New_York";}
+				if(stateName.toLowerCase() == "nc"){return "North_Carolina";}
+				if(stateName.toLowerCase() == "nd"){return "North_Dakota";}
+				if(stateName.toLowerCase() == "oh"){return "Ohio";}
+				if(stateName.toLowerCase() == "ok"){return "Oklahoma";}
+				if(stateName.toLowerCase() == "or"){return "Oregon";}
+				if(stateName.toLowerCase() == "pa"){return "Pennsylvania";}
+				if(stateName.toLowerCase() == "ri"){return "Rhode_Island";}
+				if(stateName.toLowerCase() == "sc"){return "South_Carolina";}
+				if(stateName.toLowerCase() == "sd"){return "South_Dakota";}
+				if(stateName.toLowerCase() == "tn"){return "Tennessee";}
+				if(stateName.toLowerCase() == "tx"){return "Texas";}
+				if(stateName.toLowerCase() == "ut"){return "Utah";}
+				if(stateName.toLowerCase() == "vt"){return "Vermont";}
+				if(stateName.toLowerCase() == "va"){return "Virginia";}
+				if(stateName.toLowerCase() == "wa"){return "Washington";}
+				if(stateName.toLowerCase() == "wv"){return "West_Virginia";}
+				if(stateName.toLowerCase() == "wi"){return "Wisconsin";}
+				if(stateName.toLowerCase() == "wy"){return "Wyoming";}
+
+		}
+
+        function UpdateLead(object_id, sendObject) {
+
+			//alert("updating the lead, dnisPhoneNumber is " +  dnisPhoneNumber);
+
+			//Set Agent ID
+
+			//alert("Send Object Route is " + sendObject.sendRoute);
+			//alert("Send Object Select is " + sendObject.sendSelection);
+
+			var ContactOwnerID = document.getElementById("tagBVAgentID").textContent;
+
+			if(ContactOwnerID == '' || ContactOwnerID == 'undefined'){
+				ContactOwnerID = 1413635;
+			}
+
+			//Set State Name for update, but updates NAF_LoanState to match updates selection for State.
+			var stateName = document.getElementById("newLeadState").value;
+			var stateFullName = document.getElementById("newLeadState").options[document.getElementById("newLeadState").selectedIndex].text;
+			NAF_LoanState = "State_" + stateFullName.split(' ').join('_');
+
+			//alert("Loan State is " + NAF_LoanState);
+
+			//Old Code
+			//var stateName = document.getElementById("newLeadState").value;
+			//var LoanStateName = LookupState(stateName);
+			//NAF_LoanState = "State_" + LoanStateName;
+
+
+			//Set unless check and than overrides NAF_LoanPurpose to compensate
+			var loanPurpose = 10;
+
+			if(document.getElementById("isPurchaseLoan").checked == true){
+				loanPurpose = 10; //Purchase
+				NAF_LoanPurpose = "LoanPurpose_Purchase";
+			}else if(document.getElementById("isPurchaseLoan").checked == false){
+				loanPurpose = 20; //Refinance
+				NAF_LoanPurpose = "LoanPurpose_Refi";
+			}
+
+
+            var prospectFormData = {
+
+                "LeadID": object_id,//document.getElementById("bvProspectID").value,
+                "NameFirst": document.getElementById("firstName").value,
+                "NameMiddle": document.getElementById("middleName").value,
+                "NameLast": document.getElementById("lastName").value,
+                "AddressLine1": document.getElementById("newLeadAddressLine1").value,
+                "AddressCity": document.getElementById("newLeadAddressCity").value,
+                "AddressState": stateName,
+                "AddressZip": document.getElementById("newLeadAddressZip").value,
+
+                "PropertyLine1": document.getElementById("newLeadAddressLine1").value,
+                "PropertyCity": document.getElementById("newLeadAddressCity").value,
+                "PropertyRegion": stateName,
+                "PropertyPostal_Code": document.getElementById("newLeadAddressZip").value,
+
+                "PhoneWork": document.getElementById("PhoneWork").value,
+                "PhoneHome": document.getElementById("PhoneHome").value,
+                "PhoneCell": document.getElementById("PhoneCell").value,
+                "EMail": document.getElementById("primaryEmail").value,
+                "EMailAlt": document.getElementById("alternateEmail").value,
+                "SourceID": document.getElementById("SourceCodes").value,
+                "IsTest": document.getElementById("IsTestLead").checked,
+				"LoanPurpose" : loanPurpose,
+                "BVObjectID" : object_id,
+				"InboundDNISSourcingPhoneNumber" : dnisPhoneNumber,
+				"ContactOwnerID" : ContactOwnerID
+            };
+
+			//stateName = LookupState(stateName);
+
+            if (prospectFormData != null) {
+
+                var updateProspectCallSuccess = false;
+
+                if (prospectFormData.NameFirst != null && prospectFormData.NameLast != null &&
+                    (prospectFormData.PhoneHome != null || prospectFormData.PhoneCell != null || prospectFormData.PhoneWork != null) &&
+                    (prospectFormData.AddressState != null && prospectFormData.SourceID != null)) {
+
+                    //alert("BVObjectID Value is : " + prospectFormData.BVObjectID);
+
+                    //Construct Prospect Update Call
+                    var updateProspectUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/UpdateProspectV2";
+
+                    xhr = new XMLHttpRequest();
+                    xhr.open('POST', updateProspectUrl);
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    xhr.send(JSON.stringify(prospectFormData));
+
+                    xhr.onreadystatechange = function () {
+
+                        var DONE = 4;
+                        var SUCCESS = 200;
+
+                        //validate the response text
+                        if (xhr.readyState == DONE) {
+
+                            if (xhr.status == SUCCESS) {
+
+                                updateProspectCallSuccess = this.responseText;
+
+								//alert("Updated. Prospect transferring.");
+
+								if(sendObject.sendRoute === "branch"){
+
+									if(updateProspectCallSuccess == "false"){
+
+									alert("Update failed, please try again.");
+
+									}
+									else if(updateProspectCallSuccess == "true"){
+
+                                        //New Way
+									    //sendNotification();
+
+                                        //Old Way Below
+										fncTransfer();
+										//TransferToAgent(prospectFormData, sendObject);
+
+									}else{
+
+										alert("Update failed, please contact administrator");
+									}
+								}else if (sendObject.sendRoute === "agent"){
+
+									if(updateProspectCallSuccess == "false"){
+
+									alert("Update failed, please try again.");
+
+									}
+									else if(updateProspectCallSuccess == "true"){
+
+										//alert("Update is sending to agent");
+										TransferToAgent(prospectFormData, sendObject);
+
+									}else{
+
+										alert("Update failed, please contact administrator");
+									}
+								}else if(sendObject.sendRoute === "queue"){
+
+									if(updateProspectCallSuccess == "false"){
+
+									alert("Update failed, please try again.");
+
+									}
+									else if(updateProspectCallSuccess == "true"){
+
+											//alert("Update is sending to queue");
+											TransferToQueue(prospectFormData, sendObject);
+
+									}else{
+
+										alert("Update failed, please contact administrator");
+									}
+
+								}else{
+									if(updateProspectCallSuccess == "true"){
+										fncTransfer();
+										//TransferToAgent(prospectFormData, sendObject);
+									}else{
+										alert("Update failed, please contact administrator");
+									}
+								}
+                            }
+                        }
+                    }
+                }
+                else { alert("create prospect could not be created, form data validation fail"); }
+            }
+            else { alert("form validation is null"); }
+        }
+
+		function DoNotCall(){
+
+			//Show the DNC Modal
+			document.getElementById("modal-confirmation-dnc").style.display = "block";
+
+		}
+
+		function DoNotMail(){
+
+			//Show the DNM Modal
+			document.getElementById("modal-confirmation-dnm").style.display = "block";
+
+		}
+
+		function hideDoNotCallModal(){
+
+			document.getElementById("modal-confirmation-dnc").style.display = "none";
+
+		}
+
+		function hideDoNotMailModal(){
+
+			document.getElementById("modal-confirmation-dnm").style.display = "none";
+		}
+
+		function AddToDoNotCall(){
+
+			//alert("Adding to do not call");
+
+			//NAF_ObjectID = 6414195;
+			if(NAF_ObjectID == '' || NAF_ObjectID == 'undefined' || NAF_ObjectID == 0){
+
+				alert("Object ID does not exists, please create lead and than add to do not call");
+			}else{
+
+				alert("Sending Prospect to Do Not Call");
+				SendToDoNotCall();
+				hideDoNotCallModal();
+			}
+		}
+
+		function SendToDoNotCall(){
+
+		    var SendToDoNotCallUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/SetDoNotCall?prospectID=" + NAF_ObjectID;
+
+			xhr = new XMLHttpRequest();
+			xhr.open('GET', SendToDoNotCallUrl, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send();
+
+			xhr.onreadystatechange = function () {
+
+				var DONE = 4;
+				var SUCCESS = 200;
+
+				//validate the response text
+				if (xhr.readyState == DONE) {
+
+					if (xhr.status == SUCCESS) {
+
+						var transferSuccess = this.responseText;
+
+						if(transferSuccess == '' || transferSuccess == 'undefined'){
+
+							alert("Transfer was not successful. Try again");
+
+						}else{
+							//Successfully sent to Do Not Call
+							alert(transferSuccess);
+						}
+					}
+				}
+			};
+		}
+
+		function AddToDoNotMail(){
+
+			//alert("Adding to do not mail");
+
+			if(NAF_ObjectID == '' || NAF_ObjectID == 'undefined' || NAF_ObjectID == 0){
+
+				alert("Object ID does not exists, please select an existing lead and than add to do not mail");
+			}else{
+
+				alert("Sending Prospect to Do Not Mail");
+				SendToDoNotMail();
+				hideDoNotMailModal();
+			}
+		}
+
+		function SendToDoNotMail(){
+
+			var stateName = document.getElementById("newLeadState").value;
+			//NAF_ObjectID = 90909;
+
+			var prospectFormData = {
+
+                "RecordID": NAF_ObjectID,
+                "FirstName": document.getElementById("firstName").value,
+                "LastName": document.getElementById("lastName").value,
+                "Address": document.getElementById("newLeadAddressLine1").value,
+                "City": document.getElementById("newLeadAddressCity").value,
+                "State": stateName,
+                "Zip": document.getElementById("newLeadAddressZip").value,
+                "Active": true,
+                "DataEntered": document.getElementById("PhoneWork").value,
+                "ByWhom": document.getElementById("tagAgentID").innerText,
+                "Validated": true
+            };
+
+			var SendToDoNotMailUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/SetDoNotMail";
+
+			xhr = new XMLHttpRequest();
+			xhr.open('POST', SendToDoNotMailUrl);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send(JSON.stringify(prospectFormData));
+
+			xhr.onreadystatechange = function () {
+
+				var DONE = 4;
+				var SUCCESS = 200;
+
+				//validate the response text
+				if (xhr.readyState == DONE) {
+
+					if (xhr.status == SUCCESS) {
+
+						var message = this.responseText;
+
+						if(message == '' || message == 'undefined'){
+
+							alert("Added to Do Not Mail, Try again.");
+						}
+						else{
+
+							alert(message);
+						}
+					}
+				}
+			}
+		}
+
+		function SetDomainForLO(value){
+
+			var currentSelectedLO = value;
+
+			var SendToDoNotCallUrl = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetBranchForLoanAgentID?loanAgentID=" + currentSelectedLO;
+			var loanBranch = {
+				"BranchID" : 68,
+				"BranchName" : "NAF"
+			};
+
+
+			xhr = new XMLHttpRequest();
+			xhr.open('GET', SendToDoNotCallUrl, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send();
+
+			xhr.onreadystatechange = function () {
+
+				var DONE = 4;
+				var SUCCESS = 200;
+
+				//validate the response text
+				if (xhr.readyState == DONE) {
+
+					if (xhr.status == SUCCESS) {
+
+						var loanBranch = JSON.parse(this.responseText);
+
+						//Default falut "NAF will be set"
+						if(loanBranch.BranchID != undefined)
+						{
+							if(loanBranch.BranchID != '')
+							{
+								if(loanBranch.BranchID != 0)
+								{
+									document.getElementById("ddlBranches").value = loanBranch.BranchID;
+								}
+							}
+						}
+					}
+				}
+			};
+		}
+    </script>
+</HEAD>
+<BODY onload="Init();">
+
+
+    <div class="mt20 ml20 mr20 f13 corners clearfix">
+        <table width="100%" border="1" style="display: block;">
+            <tr>
+                <td colspan=3>Browser : <span id="spnbrowser"></span></td>
+            </tr>
+            <tr>
+                <td>Agent ID: <em id="tagAgentID">[Agent ID]</em></td>
+            </tr>
+            <tr>
+                <td>Agent Status: <em id="tagAgentStatus">[Agent Status]</em></td>
+            </tr>
+            <tr>
+                <td>ZONE: <em id="tagZone">[ZONE]</em></td>
+            </tr>
+            <tr>
+                <td>Agent BV-ID: <em id="tagBVAgentID">[Agent BV-ID]</em></td>
+            </tr>
+            <tr>
+                <td>Interaction ID: <em id="tagCallID">[Call  ID]</em></td>
+            </tr>
+            <tr>
+                <td>Campaign: <em id="infocampaign">[Campaign Name]</em></td>
+            </tr>
+            <tr>
+                <td>Dialing Mode:<em id="tagDialingMode">[Dialing Mode]</em><br></td>
+            </tr>
+            <tr>
+                <td>CallerID: <em id="infocallerid">[Caller ID number]</em></td>
+            </tr>
+            <tr>
+                <td>DNIS: <em id="infoDNIS">[DNIS]</em></td>
+            </tr>
+            <tr>
+                <td>Campaign Name: <em id="tagCampaignName">[Campaign Name]</em><br></td>
+            </tr>
+        </table>
+        <br>
+        <div style="display: none;">Call State: <em id="infocallstate">[Call State]</em><br></div>
+        <br>
+        <div style="display:block;">
+            NAF_ObjectID: <em id="tagNAF_ObjectID">[NAF_ObjectID]</em><br>
+            NAF_LoanType: <em id="tagNAF_LoanType">[NAF_LoanType]</em><br>
+            NAF_LoanState: <em id="tagNAF_LoanState">[NAF_LoanState]</em><br>
+            NAF_LoanZip: <em id="tagNAF_LoanZip">[NAF_LoanZip]</em><br />
+            NAF_LoanPurpose: <em id="tagNAF_LoanPurpose">[NAF_LoanPurpose]</em><br>
+            NAF_DialerCallback: <em id="tagNAF_DialerCallback">[NAF_DialerCallback]</em><br>
+
+        </div>
+        <hr>
+        <input type=button value="Available" onclick="SetClientStatus('Available');">
+        <input type=button value="Do Not Disturb" onclick="SetClientStatus('Do Not Disturb');">
+        <input type=button value="Break" onclick="fncBreak();">
+
+
+        <!-- button text is enclosed in <span> to allow for east deletion by adding the "hideText" attribute to ButtonBar -->
+        <p id=ButtonBar style="BACKGROUND-COLOR: silver">
+            <button onclick="Pickup();" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=P id=button2 name=button2><IMG alt=Pickup src="images\pickup.gif" vspace=2><span><br><u>P</u>ickup</span></button>
+            <button onclick="CallAction('Hold')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=H id=button4 name=button4><IMG alt=Hold src="images\hold.gif" vspace=2><span><br><u>H</u>old</span></button>
+            <button onclick="CallAction('Mute')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=u id=button10 name=button10><IMG alt=Mute src="images\mute.gif" vspace=2><span><br>M<u>u</u>te</span></button>
+            <button onclick="Disconnect();" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=D id=button3 name=button3><IMG alt=Disconnect src="images\disconnect.gif" vspace=2><span><br><u>D</u>isconnect</span></button>
+            <!-- <button onclick="fncTransfer();" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=T id=button5 name=button5><IMG alt=Transfer src="images\transfer.gif" vspace=2><span><br><u>T</u>ransfer to LO</span></button> -->
+            <!--       <button onclick="CallAction('VoiceMail')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=V id=button6 name=button6><IMG alt=Voicemail src="images\voicemail.gif" vspace=2><span><br><u>V</u>oicemail</span></button>
+                   <button onclick="CallAction('Listen')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=L id=button7 name=button7><IMG alt=Listen src="images\listen.gif" vspace=2><span><br><u>L</u>isten</span></button>
+                   <button onclick="CallAction('Record')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=R id=button8 name=button8><IMG alt=Record src="images\record.gif" vspace=2><span><br><u>R</u>ecord</span></button>
+                   <button onclick="CallAction('Pause')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=a id=button9 name=button9><IMG alt=Pause src="images\pause.gif" vspace=2><span><br>P<u>a</u>use</span></button>
+                   <button onclick="CallAction('Private')" style="FONT-SIZE: xx-small; WIDTH: 80px" accessKey=i id=button11 name=button11><IMG alt=Private src="images\private.gif" vspace=2><span><br>Pr<u>i</u>vate</span></button>
+            -->
+        </p>
+        <!--<input type=button value="Pickup" onclick="Pickup();"><IMG alt=Pickup src="images\pickup.gif" vspace=2><span><br><u>P</u>ickup</span></button>
+         <input type=button value="Hold" onclick="Hold();">
+         <input type=button value="Mute" onclick="Mute();">
+         <input type=button value="transfer to lo" onclick="fnctransfer();">
+         <input type=button value="Disconnect" onclick="Disconnect();">
+        -->
+
+        <hr>
+    </div>
+    <!--<form id="form1" runat="server">-->
+    <form>
+
+        <div class="mt20 ml20 mr20 f13 corners clearfix">
+
+            <table class="generalTable" id="searchLead">
+                <tr class="form-title">
+                    <th colspan="3">
+                        <h1>Look up Lead</h1>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Street</label>
+                        <input type="text" name="AddressLine1" tabindex="1" id="AddressLine1" />
+                    </td>
+                    <td>
+                        <label>Zip</label>
+                        <input type="text" name="AddressZip" tabindex="2" id="AddressZip" />
+                    </td>
+                    <td rowspan="5" class="searchAction">
+                        <button type="button" class="search-button btn btn-primary" tabindex="11" onclick="initSearch()">Search</button>
+                        <button type="button" class="btn btn-basic" onclick="SetDefaultValues();">Clear All Fields</button>
+                        <button type="button" onclick="addNewProspectDisplay()">Add Manual Lead</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>City</label>
+                        <input type="text" name="AddressCity" tabindex="3" id="AddressCity" />
+                    </td>
+                    <td>
+                        <label>State</label>
+                        <select tabindex="4" name="AddressState" id="AddressState">
+                            <option value="" selected="selected">State</option>
+                            <option value="AL">Alabama</option>
+                            <option value="AK">Alaska</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="AR">Arkansas</option>
+                            <option value="CA">California</option>
+                            <option value="CO">Colorado</option>
+                            <option value="CT">Connecticut</option>
+                            <option value="DE">Delaware</option>
+                            <option value="DC">District Of Columbia</option>
+                            <option value="FL">Florida</option>
+                            <option value="GA">Georgia</option>
+                            <option value="HI">Hawaii</option>
+                            <option value="ID">Idaho</option>
+                            <option value="IL">Illinois</option>
+                            <option value="IN">Indiana</option>
+                            <option value="IA">Iowa</option>
+                            <option value="KS">Kansas</option>
+                            <option value="KY">Kentucky</option>
+                            <option value="LA">Louisiana</option>
+                            <option value="ME">Maine</option>
+                            <option value="MD">Maryland</option>
+                            <option value="MA">Massachusetts</option>
+                            <option value="MI">Michigan</option>
+                            <option value="MN">Minnesota</option>
+                            <option value="MS">Mississippi</option>
+                            <option value="MO">Missouri</option>
+                            <option value="MT">Montana</option>
+                            <option value="NE">Nebraska</option>
+                            <option value="NV">Nevada</option>
+                            <option value="NH">New Hampshire</option>
+                            <option value="NJ">New Jersey</option>
+                            <option value="NM">New Mexico</option>
+                            <option value="NY">New York</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="ND">North Dakota</option>
+                            <option value="OH">Ohio</option>
+                            <option value="OK">Oklahoma</option>
+                            <option value="OR">Oregon</option>
+                            <option value="PA">Pennsylvania</option>
+                            <option value="RI">Rhode Island</option>
+                            <option value="SC">South Carolina</option>
+                            <option value="SD">South Dakota</option>
+                            <option value="TN">Tennessee</option>
+                            <option value="TX">Texas</option>
+                            <option value="UT">Utah</option>
+                            <option value="VT">Vermont</option>
+                            <option value="VA">Virginia</option>
+                            <option value="WA">Washington</option>
+                            <option value="WV">West Virginia</option>
+                            <option value="WI">Wisconsin</option>
+                            <option value="WY">Wyoming</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>First Name</label>
+                        <input type="text" name="NameFirst" tabindex="5" id="NameFirst" />
+                    </td>
+                    <td>
+                        <label>Last Name</label>
+                        <input type="text" name="NameLast" tabindex="6" id="NameLast" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Phone</label>
+                        <input type="text" name="PhonNumber" tabindex="7" id="PhoneNumber" />
+                    </td>
+                    <td>
+                        <label>Domain</label>
+                        <select tabindex="8" name="DomainID" id="DomainID" runat="server"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Ref ID</label>
+                        <input type="text" name="RefID" id="RefID" tabindex="10" />
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+
+            <div class="results" id="searchResults">
+            </div>
+
+        </div>
+
+        <div class="modal-overlay" id="newProspect">
+            <div class="modal-container">
+                <div class="modal-header clearfix">
+                    <h2>New Prospect</h2>
+                    <a href="#" class="closeModal" onclick="addNewProspectHide()">Close [X] </a>
+                </div>
+                <div class="modal-body clearfix">
+
+                    <table class="tblContainer">
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th>
+                                            Name
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>First</label>
+                                            <input type="text" id="firstName" name="firstName" class="required" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Middle</label>
+                                            <input type="text" id="middleName" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Last</label>
+                                            <input type="text" id="lastName" name="lastName" class="required" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Address</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Address</label>
+                                            <input type="text" id="newLeadAddressLine1" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>City</label>
+                                            <input type="text" id="newLeadAddressCity" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>State</label>
+                                            <select name="newLeadState" id="newLeadState" style="width: 181px;" class="required">
+                                                <option value="" selected="selected">State</option>
+                                                <option value="AL">Alabama</option>
+                                                <option value="AK">Alaska</option>
+                                                <option value="AZ">Arizona</option>
+                                                <option value="AR">Arkansas</option>
+                                                <option value="CA">California</option>
+                                                <option value="CO">Colorado</option>
+                                                <option value="CT">Connecticut</option>
+                                                <option value="DE">Delaware</option>
+                                                <option value="DC">District Of Columbia</option>
+                                                <option value="FL">Florida</option>
+                                                <option value="GA">Georgia</option>
+                                                <option value="HI">Hawaii</option>
+                                                <option value="ID">Idaho</option>
+                                                <option value="IL">Illinois</option>
+                                                <option value="IN">Indiana</option>
+                                                <option value="IA">Iowa</option>
+                                                <option value="KS">Kansas</option>
+                                                <option value="KY">Kentucky</option>
+                                                <option value="LA">Louisiana</option>
+                                                <option value="ME">Maine</option>
+                                                <option value="MD">Maryland</option>
+                                                <option value="MA">Massachusetts</option>
+                                                <option value="MI">Michigan</option>
+                                                <option value="MN">Minnesota</option>
+                                                <option value="MS">Mississippi</option>
+                                                <option value="MO">Missouri</option>
+                                                <option value="MT">Montana</option>
+                                                <option value="NE">Nebraska</option>
+                                                <option value="NV">Nevada</option>
+                                                <option value="NH">New Hampshire</option>
+                                                <option value="NJ">New Jersey</option>
+                                                <option value="NM">New Mexico</option>
+                                                <option value="NY">New York</option>
+                                                <option value="NC">North Carolina</option>
+                                                <option value="ND">North Dakota</option>
+                                                <option value="OH">Ohio</option>
+                                                <option value="OK">Oklahoma</option>
+                                                <option value="OR">Oregon</option>
+                                                <option value="PA">Pennsylvania</option>
+                                                <option value="RI">Rhode Island</option>
+                                                <option value="SC">South Carolina</option>
+                                                <option value="SD">South Dakota</option>
+                                                <option value="TN">Tennessee</option>
+                                                <option value="TX">Texas</option>
+                                                <option value="UT">Utah</option>
+                                                <option value="VT">Vermont</option>
+                                                <option value="VA">Virginia</option>
+                                                <option value="WA">Washington</option>
+                                                <option value="WV">West Virginia</option>
+                                                <option value="WI">Wisconsin</option>
+                                                <option value="WY">Wyoming</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <td>
+                                        <label>Zip</label>
+                                        <input type="text" style="width: 60px;" id="newLeadAddressZip" />
+                                    </td>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th>Phone</th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Home Phone</label>
+                                            <input type="text" id="PhoneHome" class="required" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Work Phone</label>
+                                            <input type="text" id="PhoneWork" class="required" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Cell Phone</label>
+                                            <input type="text" id="PhoneCell" class="required" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Source Code</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label></label>
+                                            <input id="isPurchaseLoan" type="checkbox" />
+                                            <span class="right-label" style="width: 200px;">Is Purchase Loan?</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Source</label>
+                                            <select name="SourceCodes" id="SourceCodes" style="width: 250px;">
+                                                <option>Select a Station</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Orig Source</label>
+                                            <span id="origSource">None</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Email</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Primary</label>
+                                            <input type="text" id="primaryEmail" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Alternate</label>
+                                            <input type="text" id="alternateEmail" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Language</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Language</label>
+                                            <select id="ddlSelectLanguage" name="ddlSelectLanguage">
+                                                <option value="-1">Select a Language</option>
+                                                <option value="0" selected>English</option>
+                                                <option value="1">Spanish</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label></label>
+                                            <input type="checkbox" id="IsTestLead" />
+                                            <span class="right-label">Test Lead </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table style="background: #eee;">
+                                    <tr>
+                                        <td>
+                                            <label>Note</label>
+                                            <textarea id="txtProspectNote" name="txtProspectNote" cols="40" rows="5" style="margin-left: 80px; margin-top: -20px;"></textarea>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="radio" id="rbBranches" name="rbBranches" class="prospect-senders-group" onclick="updateProspectSenderGroupChange(this)" />
+                                            <span class="right-label">Send to Branch</span>
+                                            <select id="ddlBranches" style="width: 66%;">
+                                                <option>All Domains</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="radio" id="rbAgent" name="rbAgent" class="prospect-senders-group" onclick="updateProspectSenderGroupChange(this)" />
+                                            <span class="right-label">Send to Agent </span>
+                                            <select id="ddlAgents" style="width: 66%;" onchange="SetDomainForLO(this.value);">
+                                                <option>Select an Option</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <input type="radio" id="rbQueue" name="rbQueue" class="prospect-senders-group" onclick="updateProspectSenderGroupChange(this)" />
+                                            <span class="right-label">Send to Queue </span>
+                                            <select id="ddlQueue" style="width: 66%;">
+                                                <option value="0">Select an Option</option>
+                                                <option value="536238">Overnight Queue</option>
+                                                <option value="758541">Reverse Mortgage Queue</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="modal-action-buttons">
+                                            <button type="button" name="btnAddToDoNotCall" id="btnAddToDoNotCall" onclick="return DoNotCall()">Add To Do Not Call List</button>
+                                            <button type="button" name="btnAddToDoNotMail" id="btnAddToDoNotMail" onclick="return DoNotMail()">Add To Do Not Mail List</button>
+                                            <button type="button" name="btnClearLVMEntry" id="btnClearLVMEntry" onclick="return ClearLVMDataEntry()">Clear LVM Add Manual Entry</button>
+                                            <button type="button" name="btntransferprospect" id="btntransferprospect" class="send-im-button" onclick="return validateForm()">Transfer</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr style="display: none;">
+                            <td>
+                                <input type="hidden" name="bvProspectID" id="bvProspectID" />
+                                <input type="hidden" name="bvLeadSourceEnum" id="bvLeadSourceEnum" />
+                                <input type="hidden" name="bvDataResultID" id="bvDataResultID" />
+                                <input type="hidden" name="hidLeadNote" id="hidLeadNote" />
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+        <!--Modal for Do Not Call -->
+        <div id="modal-confirmation-dnc" class="modal-overlay" style="display: none;">
+            <div class="modal-container-dnc">
+                <div class="modal-header clearfix">
+                    <label>Interaction Scripter - Do Not Call Confirmation</label>
+                    <a href="#" class="closeModal" onclick="hideDoNotCallModal()">Close [X] </a>
+                </div>
+
+                <label style="margin-left: 12px; margin-top: 10px">Are you sure you want to mark this as Do Not Call?</label>
+
+                <div style="margin-left: 20px; margin-top: 15px;">
+                    <button type="button" name="btnDNCConfirmationYes" id="btnDNCConfirmationYes" onclick="return AddToDoNotCall();">Yes, I am sure.</button>
+                    <button type="button" name="btnDNCConfirmationNo" id="btnDNCConfirmationNo" onclick="return hideDoNotCallModal();">No, Cancel this.</button>
+                </div>
+            </div>
+        </div>
+
+        <!--Modal for Do Not Mail -->
+        <div id="modal-confirmation-dnm" class="modal-overlay" style="display: none;" title="Interaction Scripter - Do Not Mail Confirmation">
+            <div class="modal-container-dnm">
+                <div class="modal-header clearfix">
+                    <label>Interaction Scripter - Do Not Mail Confirmation</label>
+                    <a href="#" class="closeModal" onclick="hideDoNotMailModal()">Close [X] </a>
+                </div>
+
+                <label style="margin-left: 12px; margin-top: 10px">Are you sure you want to mark this as Do Not Mail?</label>
+
+                <div style="margin-left: 20px; margin-top: 15px;">
+                    <button type="button" name="btnDNMConfirmationYes" id="btnDNMConfirmationYes" onclick="return AddToDoNotMail();">Yes, I am sure.</button>
+                    <button type="button" name="btnDNMConfirmationNo" id="btnDNMConfirmationNo" onclick="hideDoNotMailModal();">No, Cancel this.</button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+
+</BODY>
+
+</HTML>

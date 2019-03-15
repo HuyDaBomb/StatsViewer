@@ -1,0 +1,2421 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="caller.aspx.cs" Inherits="Encompass.CreateNewLoan.inbound.caller1" %>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Incoming Call ASPX</title>
+    <link href="/Content/reset.css" rel="stylesheet" />
+    <link href="/Content/gen-styl.css" rel="stylesheet" />
+    <meta name="IS_ACTION_SetForeground" />
+    <meta name="IS_ACTION_SelectPage" />
+    <meta name="IS_SYSTEM_AgentID" />
+    <meta name="IS_ATTR_CampaignID" />
+    <meta name="IS_ATTR_WorkflowID" />
+    <meta name="IS_ATTR_Callid" />
+    <meta name="is_attr_schedphone" />
+    <meta name="IS_ACTION_RequestBreak" />
+    <meta name="IS_ACTION_EndBreak" />
+    <meta name="IS_ACTION_Record" />
+    <meta name="IS_ACTION_WriteData" />
+    <meta name="IS_ACTION_Stage" />
+    <meta name="IS_ACTION_SetFocus" />
+    <meta name="IS_ACTION_Trace" />
+    <meta name="IS_ACTION_ClientStatus" />
+    <meta name="IS_ACTION_RequestLogoff" />
+
+
+    <link href="/Content/reset.css" rel="stylesheet" />
+    <link href="/Content/gen-styl.css" rel="stylesheet" />
+    <link href="/Content/Site.css" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/customdata.js"></script>
+    <!--
+<script type="text/javascript" src="/Scripts/globalVars.js"></script>
+<script type="text/javascript" src="/Scripts/meta.js"></script>
+<script type="text/javascript" src="/Scripts/customInboundFunc.js"></script>
+<script type="text/javascript" src="/Scripts/dispositionsFunc.js"></script>
+<script type="text/javascript" src="/Scripts/callcontrolsFunc.js"></script>
+
+<script type="text/javascript" src="/Scripts/setScreenFunc.js"></script>
+<script type="text/javascript" src="/Scripts/functions.js"></script>
+-->
+
+    <script type="text/javascript">
+
+        //Script CONSTANTS
+        var SiteID = 'USICSERVER'; //CIC server name
+
+        var BREAK_STATUS = 'Do Not disturb';
+        var ACW_STATUS = 'Do Not disturb';
+        var ACW_TIMEOUT = 0;
+        var ACW_ENABLED = true;
+
+        var PreviewPage = "/preview.htm";
+        var PredictivePage = "/predictive.htm";
+        var InboundPage = "/inbound.htm";
+        var WaitForCallPage = "main.htm";
+        var ACWPage = "acw.htm";
+        var BreakPage = "/break.htm";
+        var DispositionXMLFileLocation = "Dispositions.xml";
+        var SortDispositions = false;
+
+        var btnPickup = document.getElementsByName("btnPickup");
+        var btnHold = document.getElementsByName("btnHold");
+        var btnMute = document.getElementsByName("btnMute");
+        var btnDisconnect = document.getElementsByName("btnDisconnect");
+        var btnTransfer = document.getElementsByName("btnTransfer");
+        var btnRecord = document.getElementsByName("btnRecord");
+        var btnBreak = document.getElementsByName("btnBreak");
+        var btnLogoff = document.getElementsByName("btnLogoff");
+        var btnAvailable = document.getElementsByName("btnAvailable");
+
+        var scrBreak = document.getElementById("scrBreak");
+
+        var slgUrlStatic = 'http://i3phone.qac.slgmortgage.com/inbound/caller/';
+        var SLG_LeadID = '';
+        var SLG_StateSkill = '';
+        var SLG_LeadType = '';
+        var getUrl = '';
+        var SLG_MBTransfer = '69999'; //extension of MB Transfer queue 99999
+
+        /*
+        var infocallstate = document.getElementById("infocallstate");
+        var infocalltype = document.getElementById("infocalltype");
+        var infocampaign = document.getElementById("infocampaign");
+        */
+
+
+        var bManualDialPermitted = true;
+        var bRecordingPermitted = true;
+        var bListenPermitted = true;
+        var bPrivatePermitted = true;
+        var AgentOwnedScheduling = true;
+
+        var AgentlessTransferAttrName = "DialerAgentlessTransfer";
+        var AgentlessSuccessAttrName = "AgentlessTransferSuccess";
+
+        var AgentId;
+        var CampaignID; //used for Agentless calls. Set in functions.js fncInitAttrs()
+        var WorkflowID; //used for Agentless calls. Set in functions.js fncInitAttrs()
+        var i3_identity; //used for Agentless calls. Set in functions.js fncInitAttrs()
+        var CallConnectedTime; //used for Agentless calls. Set in customInboundFunc.js->customInboundSetupCall(CallObject)
+        var CallDisconnectedTime; //used for Agentless calls. Set in customInboundFunc.js->customInboundSetupCall(CallObject) and functions.js->fncCallObjectChanged(TypeId, ObjectId)
+        var CallIdLabel = "Call Id: ";
+
+        var mainPageLoaded = false;
+        var dispoLoaded = false;
+        var callControlLoaded = false;
+
+        //Global Variables
+        var STATE_DISCONNECTED = 106;
+        var CONNECTED = 105;
+        var QueueObjectArray = new Array();  // extended call object store
+        var attrNamesArray = new Array(); //stores all the Dialer Attribute names
+        var attrValuesArray = new Array(); //stores all the Dialer Attribute Values
+        var infoWindowArray = new Array();
+        var DEFAULT_ATTRS = ['is_attr_attempts',
+                'is_attr_i3_attemptsmachine',
+                'is_attr_i3_attemptsbusy',
+                'is_attr_i3_attemptsfax',
+                'is_attr_i3_attemptssystemhangup',
+                'is_attr_i3_attemptsremotehangup',
+                'is_attr_i3_attemptsnoanswer',
+                'is_attr_i3_attemptsrescheduled',
+                'is_attr_i3_attemptsabandoned',
+                'is_attr_i3_siteid',
+                'is_attr_i3_activeworkflowid',
+                'is_attr_zone',
+                'is_attr_i3_identity',
+                'is_attr_status',
+                'is_attr_callid',
+                'is_attr_campaignid',
+                'is_attr_dialingmode',
+                'is_attr_workflowid'];
+
+        var onBreak = false;
+        var IsRecorded = false;
+        var statustimer = "";
+        var onHold = false;
+        var Mute = false;
+        var scheduledCallDate;
+
+        var StatusTimer;
+        var h = 0;
+        var m = 0;
+        var s = 0;
+
+        function Init() {
+            //Change status to available
+            StatusTimer = setInterval('fncTimer();', 1000);
+            callControlLoaded = true;
+            //<!-- callControlLoaded = true; -->
+            GoAvailable();
+        }
+
+        function fncResetTimer() {
+            clearInterval(StatusTimer);
+            h = 0;
+            m = 0;
+            s = 0;
+            infostatusduration.innerText = "00:00";
+            //<!-- infostatusduration.innerText = "00:00"; -->
+            StatusTimer = setInterval('fncTimer();', 1000);
+        }
+
+
+        function fncTimer() {
+            s++;
+
+            if (s > 59) {
+                m++;
+                s = 0;
+            }
+
+            if (m > 59) {
+                h++;
+                m = 0;
+            }
+
+            dispMin = String("0" + m);
+            dispMin = dispMin.substr(dispMin.length - 2, 2);
+
+            dispSec = String("0" + s);
+            dispSec = dispSec.substr(dispSec.length - 2, 2);
+
+            if (h < 1) {
+                infostatusduration.innerHTML = dispMin + ":" + dispSec;
+            }
+            else {
+                // show hours too
+                dispHr = String("0" + h);
+                dispHr = dispHr.substr(dispHr.length - 2, 2);
+                infostatusduration.innerHTML = dispHr + ":" + dispMin + ":" + dispSec;
+            }
+        }
+
+        function fncDial(Phonenumber) {
+            CallActionDial("MakeCall", Phonenumber);
+        }
+
+        function fncTransfer() {
+            //place code her for transfer page
+            //OpenWindow("/Transfer.htm","Transfer","150","355");
+            mbTransferCall();
+
+        }
+
+        function fncRecord() {
+
+            CallAction("Record");
+            if (IsRecorded) {
+                fncInfoWindowUpdate("record", "");
+                IsRecorded = false;
+                btnRecord.className = "button2";
+            }
+            else {
+                fncInfoWindowUpdate("record", "Recording Call");
+                IsRecorded = true;
+                btnRecord.className = "button4";
+            }
+        }
+
+        function fncHold() {
+            if (onHold) {
+                fncInfoWindowUpdate("hold", "");
+                CallAction("Pickup");
+                onHold = false;
+                btnHold.className = "button2";
+            }
+            else {
+                fncInfoWindowUpdate("hold", "On Hold");
+                CallAction("Hold");
+                onHold = true;
+                btnHold.className = "button4";
+            }
+        }
+
+        function fncMute() {
+            CallAction("Mute");
+            if (Mute) {
+                fncInfoWindowUpdate("mute", "");
+                Mute = false;
+                btnMute.className = "button2";
+            }
+            else {
+                fncInfoWindowUpdate("mute", "Muted");
+                Mute = true;
+                btnMute.className = "button4";
+            }
+        }
+
+        function fncPickup() {
+            if (onHold || Mute) {
+                if (onHold) {
+                    fncHold();
+                }
+
+                if (Mute) {
+                    fncMute();
+                }
+            }
+            else {
+                CallAction("Pickup");
+            }
+
+        }
+
+        function fncDisconnect() {
+            CallAction("Disconnect");
+        }
+
+        function fncPlacePreviewCall() {
+            IS_Action_PlacePreviewCall.click();
+        }
+
+        function CallActionDial(Event, PhoneNumber, CallObjectEx) {
+            if (CallObjectEx == null || CallObjectEx == 'undefined')
+                CallObjectEx = fncGetCallObjectExFromCallID(infocallid.innerText.substr(CallIdLabel.length));
+
+            switch (Event) {
+                case "MakeCall":
+                    setScreenConnectingCall();
+                    scripter.callObject.Dial(PhoneNumber, false);
+                    //fncObjectAdded(2, scripter.callObject.id);
+                    break;
+
+                case "BlindTransfer":
+                    if (CallObjectEx == null)
+                        return;
+                    CallObjectEx.callObject.BlindTransfer(PhoneNumber);
+                    //fncRemoveQueueObject(CallObjectEx);
+                    setScreenDisconnectedCall();
+                    break;
+
+                case "PlayDigits":
+                    if (CallObjectEx == null)
+                        return;
+                    CallObjectEx.callObject.playDigits(PhoneNumber);
+                    break;
+
+                case "ConsultTransfer":
+                    if (CallObjectEx == null || CallObjectEx == 'undefined' || CallObjectEx.callObject.State == STATE_DISCONNECTED) //no call to transfer
+                    {
+                        alert('nada');
+                        return;
+                    }
+                    else {
+                        //SLG_LeadID = document.getElementById('<%= hfLeadID.ClientID %>').value;
+			    //SLG_LeadID = document.getElementById('<%= hfLeadID.ClientID %>').value;
+			    //SLG_LeadType = document.getElementById('<%= hfLeadType.ClientID %>').value;
+			    //SLG_StateSkill = document.getElementById('<%= hfStateSkill.ClientID %>').value;
+
+			    //update incoming call object with same lead ID
+			    CallObjectEx.callObject.setAttribute('SLG_LeadID', SLG_LeadID);
+			    CallObjectEx.callObject.setAttribute('EIC_Note', SLG_LeadID);
+			    CallObjectEx.callObject.setAttribute('SLG_LeadType', SLG_LeadType);
+			    CallObjectEx.callObject.setAttribute('SLG_StateSkill', SLG_StateSkill);
+
+			    //by creating a second call object we automatically put the first one on hold
+			    var CallObjectEx2 = scripter.createCallObject();
+			    CallObjectEx2.dial(PhoneNumber, false);
+			    //CallObjectEx2.setAttribute('SLG_LeadID','55555');
+
+			    //update new transfer call object with selected lead ID
+			    CallObjectEx2.setAttribute('SLG_LeadID', SLG_LeadID);
+			    CallObjectEx2.setAttribute('EIC_Note', SLG_LeadID);
+			    CallObjectEx2.setAttribute('SLG_LeadType', SLG_LeadType);
+			    CallObjectEx2.setAttribute('SLG_StateSkill', SLG_StateSkill);
+
+			    //update incoming call object with same lead ID
+			    //CallObjectEx.setAttribute('SLG_LeadID', SLG_LeadID);
+			    //CallObjectEx.setAttribute('SLG_LeadType', SLG_LeadType);
+			    //CallObjectEx.setAttribute('SLG_StateSkill', SLG_StateSkill);
+			    //alert(SLG_StateSkill + ' ' + SLG_LeadType + ' ' + SLG_LeadID);
+
+			    var doTransfer = window.confirm("Transfer Call?");
+			    //should we transfer
+			    if (!doTransfer) {
+			        CallObjectEx2.disconnect();
+			        CallObjectEx.callObject.pickup();
+			        infocallstate.innerText = "Call State: " + CallObjectEx.callObject.stateString;
+			        infocallid.innerText = CallIdLabel + CallObjectEx.id;
+			        setScreenConnectedCall();
+			        return;
+			    }
+			    else {
+			        //let's make the transfer
+			        //alert(CallObjectEx.id);
+			        CallObjectEx.callObject.consultTransfer(CallObjectEx2.id);
+
+			        //free ojbects
+			        //CallObjectEx.callObject.id = -1;
+			        //CallObjectEx2.id = -1;
+			        setScreenDisconnectedCall();
+			    }
+			}
+            break;
+    }
+}
+
+function ManualDial() {
+    OpenWindow("/DialOther.htm", "DialOther", "100", "275");
+}
+
+function CallAction(Event, CallObjectEx) {
+    // The call actions are based upon
+    // the currently selected queue item if no object is specified in the args.
+    if (CallObjectEx == null || CallObjectEx == 'undefined')
+        CallObjectEx = fncGetCallObjectExFromCallID(infocallid.innerText.substr(CallIdLabel.length));
+    //check the object again if the above statement found nothing.
+    if (CallObjectEx == null)
+        return;
+    //alert(CallObjectEx.id);
+    switch (Event) {
+        case "Pickup":
+            CallObjectEx.callObject.Pickup();
+            break;
+
+        case "Disconnect":
+            CallObjectEx.callObject.Disconnect();
+            break;
+
+        case "Hold":
+            CallObjectEx.callObject.Hold();
+            break;
+
+        case "VoiceMail":
+            CallObjectEx.callObject.Voicemail();
+            break;
+
+        case "Listen":
+            CallObjectEx.callObject.Listen();
+            break;
+
+        case "Record":
+            CallObjectEx.callObject.Record();
+            break;
+
+        case "Mute":
+            CallObjectEx.callObject.Mute();
+            break;
+
+        case "Private":
+            CallObjectEx.callObject.Private();
+            break;
+
+        default:
+            break;
+    }
+}
+
+function fncOpenCallObjectWindow() {
+    OpenWindow("/callObjectWindow.htm", "CallObjects", "180", "540");
+}
+
+function setScreenWaitCall() {
+    btnPickup.disabled = true;
+    btnHold.disabled = true;
+    btnMute.disabled = true;
+    btnDisconnect.disabled = true;
+    btnTransfer.disabled = true;
+
+    if (bRecordingPermitted)
+        btnRecord.disabled = true;
+    else
+        btnRecord.disabled = true;
+    //HideDispo();
+    //HidePreviewDial();
+
+    /*
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+
+	if (IS_ATTR_WorkflowID.value == null || IS_ATTR_WorkflowID.value == 'undefined'
+		|| IS_ATTR_WorkflowID.value == '')
+	{
+		btnBreak.disabled = false;
+		btnLogoff.disabled = true;
+	}
+	else
+	{
+		btnBreak.disabled = false;
+		btnLogoff.disabled = false;
+	}
+	*/
+
+}
+
+function setScreenConnectedCall() {
+    document.body.style.backgroundColor = "#40f040";
+    //alert ('ConnnectedCall');
+    btnPickup.disabled = false;
+
+    //alert ('step2');
+
+    btnHold.disabled = false;
+    btnMute.disabled = false;
+    btnDisconnect.disabled = false;
+    btnTransfer.disabled = false;
+
+    if (bRecordingPermitted)
+        btnRecord.disabled = false;
+    else
+        btnRecord.disabled = true;
+
+    //HidePreviewDial();
+    /*
+        if(bManualDialPermitted)
+            ShowManualDial();
+        else
+            HideManualDial();
+    */
+}
+
+function setScreenConnectingCall() {
+    btnPickup.disabled = true;
+    btnHold.disabled = true;
+    btnMute.disabled = true;
+    btnDisconnect.disabled = false;
+    btnTransfer.disabled = true;
+
+    if (bRecordingPermitted)
+        btnRecord.disabled = true;
+    else
+        btnRecord.disabled = true;
+
+    //HidePreviewDial();
+    /*
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+	*/
+}
+
+function setScreenDisconnectedCall() {
+    document.body.style.backgroundColor = "#FFFFFF";
+    btnPickup.disabled = true;
+    btnHold.disabled = true;
+    btnMute.disabled = true;
+    btnDisconnect.disabled = true;
+    btnTransfer.disabled = true;
+
+    if (bRecordingPermitted)
+        btnRecord.disabled = true;
+    else
+        btnRecord.disabled = true;
+
+    /*
+	HidePreviewDial();
+
+	if(bManualDialPermitted)
+		ShowManualDial();
+	else
+		HideManualDial();
+	*/
+}
+
+function setScreenPreviewPop() {
+    /* These should already be set
+        btnPickup.disabled = true;
+        btnHold.disabled = true;
+        btnMute.disabled = true;
+        btnDisconnect.disabled = true;
+        btnTransfer.disabled = true;
+    
+        if(bRecordingPermitted)
+            btnRecord.disabled = true;
+        else
+            btnRecord.disabled = true;
+    */
+    btnBreak.disabled = false;
+    btnLogoff.disabled = false;
+    ShowPreviewDial();
+    ShowDispo();
+
+    if (bManualDialPermitted)
+        ShowManualDial();
+    else
+        HideManualDial();
+}
+
+function setScreenPredictivePop() {
+    /* Generally the call states determine which buttons to show or hide.
+    This function is available for any other screen show/hides that may be desired
+    */
+    btnBreak.disabled = false;
+    btnLogoff.disabled = false;
+    ShowDispo();
+
+}
+
+function setScreenInboundPop() {
+    //For any non-custom Inbound call
+
+    btnPickup.disabled = false;
+    /*
+        btnHold.disabled = true;
+        btnMute.disabled = true;
+        btnDisconnect.disabled = false;
+        btnTransfer.disabled = true;
+    
+        if(bRecordingPermitted)
+            btnRecord.disabled = true;
+        else
+            btnRecord.disabled = true;
+    
+        HideDispo();
+        HidePreviewDial();
+    
+        if(bManualDialPermitted)
+            ShowManualDial();
+        else
+            HideManualDial();
+    */
+}
+
+
+function setScreenAgentlessInboundPop() {
+    //Just for Agentless Dialer transfers
+
+    ShowDispo();
+    HidePreviewDial();
+
+    if (bManualDialPermitted)
+        ShowManualDial();
+    else
+        HideManualDial();
+}
+
+function setScreenBreak() {
+    //document.body.style.backgroundColor = "#FFD700"; //gold
+    btnPickup.disabled = true;
+    btnHold.disabled = true;
+    btnMute.disabled = true;
+    btnDisconnect.disabled = true;
+    btnTransfer.disabled = true;
+
+    if (bRecordingPermitted)
+        btnRecord.disabled = true;
+    else
+        btnRecord.disabled = true;
+    //HideDispo();
+    //HidePreviewDial();
+
+    //	if(bManualDialPermitted)
+    //		ShowManualDial();
+    //	else
+    //		HideManualDial();
+}
+
+//This file contains all functions being used in this script.
+
+
+
+//------------------------------Initialization-----------------------------
+
+function Initialize() {
+    //scheduledCallDate = new ScheduleDate();
+    //loadXML(DispositionXMLFileLocation);
+    UserPermissionsInit();
+    fncInfoWindowInit();
+    checkPageLoads("setScreenWaitCall();", 0); //setScreenFunc.js
+    //alert(IS_ATTR_WorkflowID.value);
+    GoAvailable();
+
+    /*
+    ShowDispo();
+    QueueObjectArray[0]= new Object();
+    QueueObjectArray[0].callObject= new Object();
+    QueueObjectArray[0].id='9876547654';
+    QueueObjectArray[0].direction = 'outbound';
+    QueueObjectArray[0].agentless = true;
+    WorkflowID = 'ddubskytest';
+    CampaignID = 'ddubsky';
+    i3_identity = '1';
+    attrNamesArray[0]='is_attr_phonenumber';
+    attrValuesArray[0]='2266';
+    attrNamesArray[1]='is_attr_notes1';
+    attrValuesArray[1]='new notes1';
+    attrNamesArray[2]='is_attr_notes2';
+    attrValuesArray[2]='new notes2';
+    CallConnectedTime = new Date();
+    AgentId = 'Ralph';
+    infocallid.innerText = CallIdLabel + QueueObjectArray[0].id;
+    
+    /**/
+    //Display Agent Id
+    if (IS_SYSTEM_AgentID.value != null)
+        AgentId = IS_SYSTEM_AgentID.value;
+    infoagentid.innerText = "Agent: " + AgentId;
+    //AgentId = IS_SYSTEM_AgentID.value;
+    //infoagentid.innerText = "Agent: " + AgentId;
+
+
+    if (typeof scripter != "undefined") {
+        //Update the current status message
+        fncStatusChanged(scripter.myUser.statusMessage);
+        //Set event handler for status changes
+        scripter.myUser.statusChangeHandler = fncStatusChanged;
+        //define inbound call events
+        scripter.myQueue.callObjectAddedHandler = fncObjectAdded;     //triggers when new inbound call is added to users queue object
+        scripter.myQueue.objectRemovedHandler = fncObjectRemoved;		//triggers when queue object is removed from queue (not disconnected)
+        scripter.myQueue.objectChangedHandler = fncCallObjectChanged;		//triggers when call state of call object is changed
+        scripter.CallObject.stateChangeHandler = fncCallStateChange;
+
+        var curCallObject;
+        var callObjectEnum = scripter.myQueue.startCallObjectsEnum;
+        //since this is now a new page, lets see whats in the user queue again
+        while (callObjectEnum.hasMoreElements()) {
+            curCallObject = callObjectEnum.nextElement();
+            fncObjectAdded(curCallObject);
+        }
+    }
+
+}
+
+
+
+//-------------------***********CALL OBJECT HANDLERS***********-------------
+function fncObjectAdded(CallObject) {
+    //set the scripter.CallObject method to reflect THIS call
+    //scripter.CallObject.id = CallObjectId;
+    var CallObjectId = CallObject.id;
+    //alert(CallObjectId);
+
+    //set up the CallObject variable
+    //var CallObject = scripter.CallObject;
+
+    //CallObject
+    if (CallObject == null)
+        return;
+
+    // Call is not disconnected
+    //if(CallObject.State == STATE_DISCONNECTED)
+    if (CallObject.State == STATE_DISCONNECTED)
+        return;
+
+    // verify that this object does not already exist in our QueueObject Array.
+    //if(fncGetCallObjectExFromCallObject(CallObject) != null)
+    if (fncGetCallObjectExFromCallObject(CallObject) != null)
+        return;
+    bCallConnected = true;
+
+    // find the next open position in the array
+    for (var i = 0; i < QueueObjectArray.length; i++) {
+        if (QueueObjectArray[i] == null)
+            break;
+    }
+
+    // add the call object to the array
+    QueueObjectArray[i] = new Object();
+    var CallObjectEx = QueueObjectArray[i];
+
+    // call object attributes
+    CallObjectEx.callObject = CallObject;
+    CallObjectEx.id = CallObject.id;
+    CallObjectEx.phonenumber = CallObject.getAttribute('Eic_RemoteTn');
+
+    //Write trace message
+    fncTrace('Object ' + CallObjectId + ' added to queue', '2');
+
+    //update call id label
+
+    //Enable Call Control buttons
+    setScreenConnectedCall(); //setScreenFunc.js
+
+    //SLG_LeadID = CallObject.getAttribute('SLG_LeadID');
+    SLG_LeadID = CallObject.getAttribute('BV_ObjectID');
+    //infoleadid.innerText = SLG_LeadID.value;
+    //alert (SLG_LeadID);
+    //alert ('LeadID: ' + infoleadid);
+
+    var slgUrlLeadID = slgUrlStatic + '?lead=' + SLG_LeadID;
+
+    if (SLG_LeadID == '') {
+        getUrl = slgUrlStatic;
+    }
+    else {
+        getUrl = slgUrlLeadID;
+    }
+
+
+    //is Outbound Agentless call?
+    if (CallObject.direction == 1) {
+        //infocallid.innerText = CallIdLabel + CallObjectId;
+        infocallid.innerText = CallIdLabel + CallObjectId;
+        CallObjectEx.direction = 'outbound';
+        //alert(CallObjectEx.direction + '\n' + CallObject.getAttribute(AgentlessTransferAttrName));
+        if (CallObject.getAttribute(AgentlessTransferAttrName) == 'true') {
+            CallObject.setAttribute(AgentlessSuccessAttrName, 'success');
+            //alert(CallObject.getAttribute(AgentlessSuccessAttrName));
+            CallObjectEx.agentless = true;
+            customInboundSetupCall(CallObject); //customInboundFunc.js
+        }
+        else {
+            CallObjectEx.agentless = false;
+            customInboundSetupCall(CallObject);
+        }
+    }
+
+    // Is inbound call?
+    if (CallObject.direction == 0) {
+        //infocallid.innerText = CallIdLabel + CallObjectId;
+        //alert (CallObject);
+        infocallid.innerText = CallIdLabel + CallObjectId;
+        CallObjectEx.direction = 'inbound';
+        if (CallObject.getAttribute(AgentlessTransferAttrName) == 'true')
+            CallObjectEx.agentless = true;
+        else CallObjectEx.agentless = false;
+
+        // bring the app window to the top
+        if (typeof scripter != "undefined") IS_ACTION_SetForeground.click();
+
+        // bring this tab page to the top
+        if (typeof scripter != "undefined") IS_ACTION_SelectPage.click();
+
+        customInboundSetupCall(CallObject); //customInboundFunc.js
+
+        //alert (SLG_LeadID);
+
+        //location.href = getUrl;
+    }
+    return (CallObject);
+}
+
+function OnCalObj() {
+    var SLG_LeadID = CallObject.getAttribute('SLG_LeadID');
+
+
+    var qs = window.GetQueryString(lead);
+    var qsVal = qs("value")
+    CallObject.setAttribute('SLG_LeadID', qsVal);
+    alert(SLG_LeadID);
+    alert(qs);
+    alert(qsval);
+
+    var slgUrlLeadID = 'http://i3phone.qac.slgmortgage.com/create/?lead=' + qsVal;
+
+    //location.href = slgUrlLeadID;
+}
+
+
+function fncCallObjectChanged(TypeId, ObjectId) {
+    //make sure the correct call id is assigned
+    scripter.CallObject.id = ObjectId;
+
+    var CallObject = scripter.CallObject;
+
+    //Write trace message
+    fncTrace('Object ' + ObjectId + ' changed to callstate ' + CallObject.state, '2');
+
+    //Call disconnected
+    //if (CallObject.state == STATE_DISCONNECTED)
+    if (CallObject.state == STATE_DISCONNECTED) {
+        //remove the object from the array. This also happens the object is removed, but in case something goes wrong, no memory leak
+        var CallObjectEx = fncGetCallObjectExFromCallObject(CallObject);
+        if (CallObjectEx != null) {
+            if (CallObjectEx.agentless != true)
+                //fncRemoveQueueObject(CallObjectEx);
+                fncRemoveQueueObject(CallObjectEx);
+            else CallDisconnectedTime = new Date();
+        }
+        //reset call control buttons
+        setScreenDisconnectedCall(); //setScreenFunc.js
+        //Empty campaign name
+        //infocampaign.innerText = "Call Type: [None]";
+        infocampaign.innerText = "Call Type: [None]";
+        //document.body.style.backgroundColor = "#FFFFFF";
+    }
+
+    //infocallstate.innerText = "Call State: " + CallObject.stateString;
+    infocallstate.innerText = "Call State: " + CallObject.stateString;
+}
+
+function fncCallStateChange(StateId, StateString) {
+    //do something
+    //infocallstate.innerText = 'Call State: ' + StateString;
+    infocallstate.innerText = 'Call State: ' + StateString;
+}
+
+function fncObjectRemoved(TypeId, ObjectId) {
+    //find the object in the array
+    var CallObjectEx = fncGetCallObjectExFromCallID(ObjectId);
+    if (CallObjectEx == null)
+        return;
+    //remove the object form the array. This also happens the call is disconnected, but in case something goes wrong, no memory leak
+    if (CallObjectEx != null) {
+        if (CallObjectEx.agentless != true)
+            //fncRemoveQueueObject(CallObjectEx);
+            fncRemoveQueueObject(CallObjectEx);
+    }
+
+    //fncTrace('CustomObjectRemoved', '2');
+    //fncTrace(ObjectId, '2');
+    fncTrace('CustomObjectRemoved', '2');
+    fncTrace(ObjectId, '2');
+
+    // remove this object from the queue display
+    // insert other code here as needed...
+}
+
+
+//------------***********Array Handlers***********-------------
+function fncGetCallObjectExFromCallObject(CallObject) {
+    for (var i = 0; i < QueueObjectArray.length; i++) {
+        if ((QueueObjectArray[i] != null) && (QueueObjectArray[i].callObject == CallObject)) {
+            return (QueueObjectArray[i]);
+        }
+    }
+
+    return (null);  // not found
+}
+
+function fncGetCallObjectExFromCallID(CallID) {
+    for (var i = 0; i < QueueObjectArray.length; i++) {
+        if ((QueueObjectArray[i] != null) && (QueueObjectArray[i].id == CallID)) {
+            return (QueueObjectArray[i]);
+        }
+    }
+    return (null);  // not found
+}
+
+function fncRemoveQueueObject(CallObjectEx) {
+    if (CallObjectEx == null)
+        return;
+
+    // find the queue object array entry
+    for (var i = 0; i < QueueObjectArray.length; i++) {
+        if ((QueueObjectArray[i] != null) && (QueueObjectArray[i].callObject.id == CallObjectEx.callObject.id)) {
+            // remove the object from the table and the array
+            QueueObjectArray[i] = null;
+        }
+    }
+
+}
+
+function fncInitAttrs(attrNames, attrValues) {
+    for (var i = 0; i < attrNames.length; i++) {
+        //alert(i + "\t" + attrNames[i]);
+        if (attrNames[i] == 'is_attr_campaignid')
+            CampaignID = attrValues[i];
+
+        if (attrNames[i] == 'is_attr_workflowid')
+            WorkflowID = attrValues[i];
+
+        if (attrNames[i] == 'is_attr_i3_identity')
+            i3_identity = attrValues[i];
+        /*
+		if(!fncIsDefaultAttr(attrNames[i]))
+		{
+		*/
+        attrNamesArray.push(attrNames[i]);
+        attrValuesArray.push(attrValues[i]);
+        //}
+    }
+}
+
+function fncIsDefaultAttr(name) {
+    for (var i = 0; i < DEFAULT_ATTRS.length; i++) {
+
+        if (DEFAULT_ATTRS[i] == name)
+            return true;
+    }
+    //alert(name + "\tfalse");
+    return false;
+}
+
+function fncCleanAttrArrays() {
+    attrNamesArray = null;
+    attrValuesArray = null;
+    attrNamesArray = new Array();
+    attrValuesArray = new Array();
+}
+
+function showAttrs() {
+    var alertString = '';
+    for (var i = 0; i < attrNamesArray.length; i++) {
+        alertString = alertString + "\n" + i + "\t" + attrNamesArray[i] + ":\t" + attrValuesArray[i];
+    }
+    alert(alertString);
+}
+
+function getDialerAttribute(name) {
+    var found = false;
+    for (var i = 0; i < attrNamesArray.length; i++) {
+        if (attrNamesArray[i] == "is_attr_" + name.toLowerCase()) {
+            found = true;
+            break;
+        }
+    }
+    if (found) {
+        return attrValuesArray[i];
+    }
+    else return ("Value Not Found");
+}
+
+function setDialerAttribute(name, value) {
+    for (var i = 0; i < attrNamesArray.length; i++) {
+        if (attrNamesArray[i] == "is_attr_" + name.toLowerCase())
+            attrValuesArray[i] = value;
+    }
+}
+
+function updateDialerAttributes() {
+    var sUpdateString;
+    //sUpdateString = "alert(sUpdateString)";
+    for (var i = 0; i < attrNamesArray.length; i++) {
+        if (attrNamesArray[i] != undefined && attrNamesArray[i] != 'direction' && !fncIsDefaultAttr(attrNamesArray[i])) {
+            sUpdateString = attrNamesArray[i] + ".value = attrValuesArray[i];";
+            eval(sUpdateString);
+        }
+    }
+}
+
+
+//---------***************DIALER EVENT HANDLERS*************--------------------
+function IS_Event_DataPop(names, values) {
+    // bring the app window to the top
+    if (typeof scripter != "undefined") IS_ACTION_SetForeground.click();
+
+    // bring this tab page to the top
+    if (typeof scripter != "undefined") IS_ACTION_SelectPage.click();
+    fncInitAttrs(names, values);
+    //infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+    infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+    checkPageLoads("setScreenPredictivePop();", 0); //setScreenFunc.js
+    dispoCheck();
+    //main.location.href = PredictivePage;
+    location.href = PredictivePage;
+}
+
+function IS_Event_PreviewDataPop(names, values) {
+    // bring the app window to the top
+    if (typeof scripter != "undefined") IS_ACTION_SetForeground.click();
+
+    // bring this tab page to the top
+    if (typeof scripter != "undefined") IS_ACTION_SelectPage.click();
+    fncInitAttrs(names, values);
+    //infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+    infocampaign.innerHTML = 'Call Type: Outbound Campaign - ' + IS_ATTR_CampaignID.value;
+    checkPageLoads("setScreenPreviewPop();", 0); //setScreenFunc.js
+    dispoCheck();
+    //main.location.href = PreviewPage;
+    location.href = PreviewPage;
+}
+
+/* *************IS_Event_DataPop() is used instead
+function IS_Event_NewPredictiveCall(CallId)
+{
+   // Pop the predictive page
+}
+*/
+
+function IS_Event_NewPreviewCall(CallId) {
+}
+
+function IS_Event_PredictiveCallReleased(callid) {
+}
+
+function IS_Event_BreakGranted() {
+    GoBreak();
+    // navigate to the on break page
+}
+
+
+//________****************USER OBJECT HANDLERS***********________
+function fncStatusChanged(newStatus, untilDateTime) {
+    //infostatus.innerText = newStatus;
+    //fncResetTimer();
+    infostatus.innerText = newStatus;
+    fncResetTimer();
+
+}
+
+
+//-------------****************Agent Driven Page Actions*************--------------------
+function fncSetStatus(status) {
+    IS_ACTION_ClientStatus.statusKey = status;
+    if (typeof scripter != "undefined") IS_ACTION_ClientStatus.click();
+}
+function GoAvailable() {
+    // set the agent status to Available
+    fncSetStatus("Available");
+    fncCleanAttrArrays();
+}
+
+function GoBreak() {
+    //fncInfoWindowUpdate("break", "");
+    //onBreak = true;
+    fncInfoWindowUpdate("break", "");
+    onBreak = true;
+    fncSetStatus(BREAK_STATUS);
+    setScreenBreak();
+    //main.location.href = BreakPage;
+    //location.href = BreakPage;
+    //scrBreak.style.visibility='visible';
+    document.getElementById("scrBreak").style.display = 'block';
+    TimerInit();
+}
+
+function EndBreak() {
+    //document.body.style.backgroundColor = "#FFFFFF";
+    // end break and take more calls
+    //onBreak = false;
+    //fncInfoWindowUpdate("break", "");
+    //btnBreak.disabled = false;
+
+    onBreak = false;
+    fncInfoWindowUpdate("break", "");
+    btnBreak.disabled = false;
+
+    IS_ACTION_EndBreak.click();
+    //main.location.href = WaitForCallPage;
+    //location.href = WaitForCallPage;
+    document.getElementById("scrBreak").style.display = 'none';
+
+}
+
+function fncBreak() {
+
+
+    //request a break. When the break is granted, IS_Event_BreakGranted() will fire.
+    //btnBreak.disabled=true;
+
+
+    btnBreak.disabled = true;
+    if (typeof scripter != "undefined") {
+        if (IS_ATTR_WorkflowID.value != null &&
+		   IS_ATTR_WorkflowID.value != 'undefined' &&
+		   IS_ATTR_WorkflowID.value != '') {
+            //fncInfoWindowUpdate("break", "Break Pending");
+            fncInfoWindowUpdate("break", "Break Pending");
+            IS_ACTION_RequestBreak.click();
+        }
+        else GoBreak();
+    }
+}
+
+function fncLogoff() {
+    //btnLogoff.disabled=true;
+    btnLogoff.disabled = true;
+    if (typeof scripter != "undefined") IS_ACTION_RequestLogoff.click();
+    //fncInfoWindowUpdate("logoff", "Log Off Pending");
+    fncInfoWindowUpdate("logoff", "Log Off Pending");
+}
+
+function fncSetStage(stageNumber) {
+    IS_Action_Stage.stage = stageNumber;
+    IS_Action_Stage.click();
+}
+
+
+
+//misc
+
+function InfoWindowElement(name, value) {
+    this.name = name || "";
+    this.value = value || "";
+};
+InfoWindowElement.prototype = new InfoWindowElement;
+
+function fncInfoWindowUpdate(name, newInfo) {
+    for (var i = 0; i < infoWindowArray.length; i++) {
+        if (infoWindowArray[i].name == name) {
+            infoWindowArray[i].value = newInfo;
+        }
+    }
+    fncInfoWindowPrint();
+}
+
+function fncInfoWindowPrint() {
+    var infoWindowHTML = "";
+    for (var i = 0; i < infoWindowArray.length; i++) {
+        if (infoWindowArray[i].value != "")
+            infoWindowHTML = infoWindowHTML + infoWindowArray[i].value + "<br>";
+    }
+    //infowindow.innerHTML = infoWindowHTML;
+    infowindow.innerHTML = infoWindowHTML;
+}
+
+function fncInfoWindowInit() {
+    for (var i = 0; i < 6; i++)
+        infoWindowArray[i] = new InfoWindowElement;
+
+    infoWindowArray[0].name = "mute";
+    infoWindowArray[0].value = "";
+    infoWindowArray[1].name = "hold";
+    infoWindowArray[1].value = "";
+    infoWindowArray[2].name = "record";
+    infoWindowArray[2].value = "";
+    infoWindowArray[3].name = "break";
+    infoWindowArray[3].value = "";
+    infoWindowArray[4].name = "logoff";
+    infoWindowArray[4].value = "";
+    infoWindowArray[5].name = "preview";
+    infoWindowArray[5].value = "";
+
+}
+
+function fncTrace(Message, Level) {
+    IS_ACTION_Trace.message = Message;
+    IS_ACTION_Trace.level = Level;
+    if (typeof scripter != "undefined") IS_ACTION_Trace.click();
+}
+
+function OpenWindow(Url, windowName, height, width) {
+    window.name = "ININPSOScriptMain";
+    var ext = window.open(Url, windowName, "height=" + height + ",width=" + width + ",status=no,toolbar=no,menubar=no,location=no");
+    ext.opener = window;
+}
+
+function UserPermissionsInit() {
+    if (typeof scripter != "undefined") {
+        bRecordingPermitted = scripter.MyUser.canRecord;
+        bListenPermitted = scripter.MyUser.canListen;
+        bPrivatePermitted = scripter.MyUser.canMakePrivate;
+    }
+}
+
+function checkPageLoads(evalString, attempt) {
+    attempt = attempt + 1;
+    if (attempt > 5)
+        return;
+    tempString = "checkPageLoads('" + evalString + "', " + attempt + ");";
+    //alert(tempString);
+    if (dispoLoaded && callControlLoaded) {
+        //alert(attempt);
+        eval(evalString);
+    }
+    else {
+        //alert(tempString, attempt);
+        setTimeout(tempString, 1000);
+    }
+}
+
+function pausecomp(millis) {
+    var date = new Date();
+    var curDate = null;
+
+    do { curDate = new Date(); }
+    while (curDate - date < millis);
+}
+
+function fncTimeToString(Time) {
+    var TimeString;
+    //alert(Time + '\n'+TimeString);
+    TimeString = Time.getFullYear() + '-' + padout(Time.getMonth() + 1) + '-' +
+		padout(Time.getDate()) + ' ' + padout(Time.getHours()) + ':' + padout(Time.getMinutes());
+
+    return TimeString;
+}
+
+/*var ReOrderIndexPage = "ReOrder/open.htm";
+var ReOrderDispositionFile = "ReOrder/Dispositions.xml";
+var ReOrderWorkgroupName = "RE ORDERS";
+var ReOrderCallListTable = 'ddubsky';
+var ReOrderCampaignName = 'DDUBSKY';
+var REORDER_STATUS = "ReOrder Inbound";
+
+var NewPatientIndexPage = "NewPatientIndex.htm";
+var NewPatientDispositionFile = "NewPatient/Dispositions.xml";
+var NewPatientWorkgroupName = "NEWPATIENT";
+var NewPatientCallListTable = 'newpatient';
+var NewPatientCampaignName = "NEWPATIENT";
+var NEWPATIENT_STATUS = "NewPatient Inbound";
+
+var CallingMode = 8; //Always use predictive
+*/
+
+function customInboundFinishCall(arg1, arg2, arg3, arg4) {
+    //special handling of Inbound calls that are dispositioned go here. Database accesses, etc
+    //alert('yar');
+    /*
+        var Finish = arg1;
+        var Reason = arg2;
+        var CallObjectEx = arg3;
+        var Campaign = arg4;
+        var PairDel = '!';
+        var	SeqDel = '&';
+        var CallListUpdate;
+        var CLUNum = '';
+        var CallListInsert;
+        var CLINum = '';
+        var HistoryInsert;
+        var HINum = '';
+        var ScheduleInsert;
+        var SINum = '';
+        var attrName;
+        var CallListTable;
+    
+        var POSTString;
+    
+        if (CallDisconnectedTime == '' || CallDisconnectedTime == null)
+            CallDisconnectedTime=new Date();
+    
+        if (Campaign.toUpperCase() == NewPatientCampaignName)
+            CallListTable = NewPatientListTable;
+        else if (Campaign.toUpperCase() == ReOrderCampaignName)
+            CallListTable = ReOrderCallListTable;
+    
+    //Set up query type and table name for each string
+        CallListUpdate = 'QueryType'+CLUNum+PairDel+'update'+SeqDel+'TableName'+CLUNum+PairDel+CallListTable+SeqDel;
+        CallListInsert = 'QueryType'+CLINum+PairDel+'insert'+SeqDel+'TableName'+CLINum+PairDel+CallListTable+SeqDel;
+        HistoryInsert = 'QueryType'+HINum+PairDel+'insert'+SeqDel+'TableName'+HINum+PairDel+'i3_'+WorkflowID+'_ch0'+SeqDel;
+        ScheduleInsert = 'QueryType'+SINum+PairDel+'insert'+SeqDel+'TableName'+SINum+PairDel+'i3_'+WorkflowID+'_cs0'+SeqDel;
+    
+    //Add workflow, campaign, and site names to History and Schedule inserts
+        HistoryInsert = HistoryInsert + 'workflowname'+HINum+PairDel+WorkflowID+SeqDel+
+            'campaignname'+HINum+PairDel+CampaignID+SeqDel+
+            'siteid'+HINum+PairDel+SiteID+SeqDel;
+        ScheduleInsert = ScheduleInsert + 'workflowname'+SINum+PairDel+WorkflowID+SeqDel+
+            'campaignname'+SINum+PairDel+CampaignID+SeqDel+
+            'siteid'+SINum+PairDel+SiteID+SeqDel;
+    
+    
+    //Add all updatable columns from the dialer attribute list to the Call List Update and Insert strings
+        for (var i=0; i<attrNamesArray.length; i++)
+        {
+            attrName = attrNamesArray[i].substr(8);
+            if (attrName.toLowerCase() != 'schedphone')
+            {
+                CallListUpdate = CallListUpdate+attrName+CLUNum+PairDel+attrValuesArray[i]+SeqDel;
+                CallListInsert = CallListInsert+attrName+CLINum+PairDel+attrValuesArray[i]+SeqDel;
+            }
+        }
+    
+    
+    
+    
+    //Update the History string with the history-specific fields
+        HistoryInsert = HistoryInsert +
+            'callansweredtime'+HINum+PairDel+fncTimeToString(CallConnectedTime)+SeqDel+
+            'calldisconnectedtime'+HINum+PairDel+fncTimeToString(CallDisconnectedTime)+SeqDel+
+            'reason'+HINum+PairDel+Reason+SeqDel+
+            'finishcode'+HINum+PairDel+Finish+SeqDel+
+            'length'+HINum+PairDel+Math.round((CallDisconnectedTime-CallConnectedTime)/1000)+SeqDel+
+            'callid'+HINum+PairDel+CallObjectEx.id+SeqDel+
+            'callingmode'+HINum+PairDel+'8'+SeqDel+
+            'iscontact'+HINum+PairDel+'1'+SeqDel+
+            'agentid'+HINum+PairDel+AgentId+SeqDel+
+            'phonenumber'+HINum+PairDel+CallObjectEx.phonenumber+SeqDel;
+    
+    //if the dispo is scheduled, check
+        if (Reason.toUpperCase() == 'SCHEDULED')
+        {
+            var d = scheduledCallDate;
+            if (checkDate(d.Minute, d.Hour,d.Day,d.Month, d.Year))
+            {
+                ScheduleInsert = ScheduleInsert + 'schedtime'+SINum+PairDel+d.Year+'-'+
+                padout((Number(d.Month)+1))+'-'+padout(d.Day)+' '+padout(d.Hour)+':'+padout(d.Minute)+SeqDel+
+                    'schedphone'+SINum+PairDel+CallObjectEx.phonenumber+SeqDel;
+                if (d.Agent != 'Any')
+                    ScheduleInsert = ScheduleInsert + 'agentid'+SINum+PairDel+AgentId+SeqDel;
+            //make sure the Call List has an 'S' as the status
+                CallListUpdate = CallListUpdate+'status'+CLUNum+PairDel+'S'+SeqDel;
+                CallListInsert = CallListInsert+'status'+CLINum+PairDel+'S'+SeqDel;
+            }
+            //stop processing the update, let the agent select the finish code again (dispisitionsFunc.js->dispositionCall.click())
+            else
+            {
+                var Now = new Date();
+                alert("Your have selected a time earlier than:\t" + Now + "\nPlease select a later time to schedule this call.");
+                return false;
+            }
+        }
+        else
+        {
+            CallListUpdate = CallListUpdate+'status'+CLUNum+PairDel+'U'+SeqDel;
+            CallListInsert = CallListInsert+'status'+CLINum+PairDel+'U'+SeqDel;
+        }
+    
+    
+    
+    
+    //add the i3_identity field if it exists for History and Schedule. The called C# execution function will have to provide the i3_identity if it does not exist.
+    //If i3_identity is blank, it is assumed the execute will be a cll list insertion, otherwise, it's an update
+        var identityValue = i3_identity;
+        if (identityValue != "Value Not Found" && identityValue != ''&& identityValue != null)
+        {
+        //leave off the last '&'
+            CallListUpdate = CallListUpdate+'WHERE'+CLUNum+PairDel+"i3_identity='"+identityValue+"'";
+            HistoryInsert = HistoryInsert + 'i3_identity'+HINum+PairDel+identityValue;
+            ScheduleInsert = ScheduleInsert + 'i3_identity'+HINum+PairDel+identityValue;
+        //The POST will submit a call List update
+            POSTString = CallListUpdate+HistoryInsert;
+        }
+        else
+        {
+        //Strip off the last '&' of the inserts.
+            CallListInsert = CallListInsert.substr(0,(CallListInsert.length-1));		//Strip off the last '&' of the call list insert.
+            HistoryInsert = HistoryInsert.substr(0,(HistoryInsert.length-1));		//Strip off the last '&' of the call list insert.
+            ScheduleInsert = ScheduleInsert.substr(0,(ScheduleInsert.length-1));
+    
+            POSTString = CallListInsert+HistoryInsert; //It's a Call List insert
+        }
+    
+    //add the schedule string if necessary
+        if (Reason.toUpperCase() == 'SCHEDULED') POSTString = POSTString + ScheduleInsert;
+    
+    
+        //clear out the Call time variables for the next call
+        CallDisconnectedTime = null;
+        CallConnectedTime = null;
+    
+        forms.document.getElementById('hdnField').value = POSTString;
+    
+        //submitting the form will refresh the disposition page, so set dispoLoaded to false
+        //dispoLoaded = false;
+        forms.document.forms['frmDBQuery'].submit();
+    */
+
+    return true;  //DBSubmit function executed
+
+}
+
+function customInboundSetupCall(CallObject) {
+    var CallObjectEx = fncGetCallObjectExFromCallObject(CallObject);
+    CallConnectedTime = new Date();
+    customInboundInitAttrs(CallObject);
+    var workgroupName = CallObject.getAttribute("Eic_WorkgroupName");
+    //alert ('workgroup call');
+    //alert(workgroupName + '\n'+ CallObjectEx.agentless);
+
+    customInboundWorkgroupSetScreen(workgroupName, CallObjectEx.agentless);
+    //customInboundWorkgroupPage(workgroupName, CallObjectEx.agentless);
+
+}
+
+function customInboundWorkgroupPage(workgroupName, Agentless) {
+    //if(workgroupName.toUpperCase() == "WORKGROUPNAME") top.main.location.href = "WorkgroupSpecificScript.htm"
+
+    if (Agentless) {
+        /*
+            if(workgroupName.toUpperCase() == ReOrderWorkgroupName) top.main.location.href = ReOrderIndexPage;
+    
+            if(workgroupName.toUpperCase() == NewPatientWorkgroupName) top.main.location.href = NewPatientIndexPage;
+            */
+    }
+
+    else {
+        if (SLG_LeadID != '') {
+            location.href = getUrl;
+        }
+    }
+}
+
+function customInboundWorkgroupSetScreen(workgroupName, Agentless) {
+    //alert ('inbound workgroup call');
+    if (Agentless) {
+        /*
+            //if this call was transferred from outbound Attendant, place special handling here
+            if (workgroupName.toUpperCase() == ReOrderWorkgroupName)
+            {
+                //fncSetStatus(REORDER_STATUS);
+                infocampaign.innerText = "Call Type: " + workgroupName + "-Agentless";
+                DispositionXMLFileLocation = ReOrderDispositionFile;
+                loadXML(ReOrderDispositionFile);
+            }
+            if (workgroupName.toUpperCase() == NewPatientWorkgroupName)
+            {
+                //fncSetStatus(NEWPATIENT_STATUS);
+                infocampaign.innerText = "Call Type: " + workgroupName + "-Inbound";
+                DispositionXMLFileLocation = NewPatientDispositionFile;
+                loadXML(NewPatientDispositionFile);
+            }
+        */
+        setScreenAgentlessInboundPop();
+    }
+    else {
+        infocampaign.innerText = "Call Type: Inbound Call" + " - " + workgroupName;
+        infoleadid.innerText = "LeadID: " + SLG_LeadID;
+        //document.body.style.backgroundColor = "#40f040";
+        //fncSetStatus("Working At Home");
+        setScreenInboundPop(); //setScreenFunc.js
+    }
+}
+
+function customInboundInitAttrs(CallObject) {
+    /* fncInitAttrs(attrNames, attrValues) in functions.js is the basis for this function.
+		If the Inbound script needs to display custom data, this data should be added to the
+		attrNamesArray, attrValuesArray parallel list. This way, the getDialerAttribute() function in functions.js
+		will be applicable to all script pages.
+	*/
+
+    if (CallObject != null) {
+        if (CallObject.getAttribute("customAttrNames") != '' &
+			CallObject.getAttribute("customAttrValues") != '') {
+            var attrNamesList = CallObject.getAttribute("customAttrNames");
+            var attrValuesList = CallObject.getAttribute("customAttrValues");
+            //alert(attrNamesList);
+
+            var namesArray = attrNamesList.split(";");
+            var valuesArray = attrValuesList.split(";");
+            fncInitAttrs(namesArray, valuesArray);
+        }
+    }
+
+
+}
+
+
+function TimerInit() {
+    setInterval('Timer();', 1000);
+}
+
+var h = 0;
+var m = 0;
+var s = 0;
+function Timer() {
+    s++;
+
+    if (s > 59) {
+        m++;
+        s = 0;
+    }
+
+    if (m > 59) {
+        h++;
+        m = 0;
+    }
+
+    dispMin = String("0" + m);
+    dispMin = dispMin.substr(dispMin.length - 2, 2);
+
+    dispSec = String("0" + s);
+    dispSec = dispSec.substr(dispSec.length - 2, 2);
+
+    if (h < 1) {
+        TimeField.innerHTML = dispMin + ":" + dispSec;
+    }
+    else {
+        // show hours too
+        dispHr = String("0" + h);
+        dispHr = dispHr.substr(dispHr.length - 2, 2);
+        TimeField.innerHTML = dispHr + ":" + dispMin + ":" + dispSec;
+    }
+}
+
+function WaitCall() {
+    EndBreak();
+    Init();
+    GoAvailable();
+}
+
+function mbTransferCall() {
+    var bError = false;
+    try {
+        SLG_LeadID = document.getElementById('<%= hfLeadID.ClientID %>').value;
+	    SLG_LeadType = document.getElementById('<%= hfLeadType.ClientID %>').value;
+	    SLG_StateSkill = document.getElementById('<%= hfStateSkill.ClientID %>').value;
+	}
+    catch (err) {
+        alert('Find a Lead!');
+        bError = true;
+    }
+    //alert (err);
+    if (bError != true) {
+        CallActionDial("ConsultTransfer", SLG_MBTransfer);
+        //ConferenceWithThirdPartyLocalDisconnect(SLG_MBTransfer);
+
+    }
+    //else alert ('error dude');
+}
+
+/*
+This utility function will return the call object that connects the current user to the specified conference
+* @param conferenceId - The id of a conference the current user is a part of
+* @return - The call object that is the user's leg of the conference, or null if the call leg could not be found
+*/
+
+function FindConferenceLeg(conferenceId) {
+    var callObjects = scripter.myQueue.startCallObjectsEnum;
+    while (callObjects.hasMoreElements()) {
+        var callObject = callObjects.nextElement();
+        if (callObject.conferenceId != conferenceId) { continue; }
+        if (callObject.state != 105) { continue; }
+        return callObject;
+    }
+    return null;
+}
+
+/*
+This utility function will disconnect the current user from a specified conference, leaving the other parties in the conference connected.
+* @param conferenceObject - A conference object the current user is a part of
+*/
+function DisconnectFromConference(conferenceObject) {
+    var conferenceLeg = FindConferenceLeg(conferenceObject.id);
+    if (conferenceLeg != null) { conferenceObject.disconnectParty(conferenceLeg.id); }
+}
+
+
+function ConferenceWithThirdPartyLocalDisconnect(p_Number, CallObjectEx) {
+
+    if (CallObjectEx == null || CallObjectEx == 'undefined' || CallObjectEx.callObject.State == STATE_DISCONNECTED) {
+        CallObjectEx = fncGetCallObjectExFromCallID(infocallid.innerText.substr(CallIdLabel.length));
+        if (CallObjectEx.callObject.State == STATE_DISCONNECTED)
+            alert('nada');
+        return;
+    }
+
+    else {
+        CallObjectEx = fncGetCallObjectExFromCallID(infocallid.innerText.substr(CallIdLabel.length));
+        alert(CallObjectEx.id);
+        var p_mCallObj = scripter.createCallObject();
+        var p_ConferenceObject = scripter.createConferenceObject();
+        //var iRes1 = confirm("Would you like to call the 3rd party?");
+        var iRes1 = true;
+
+        //user selected OK, so let's call the 3rd party
+        if (iRes1) {
+            p_mCallObj.dial(p_Number, false);
+
+            p_mCallObj.setAttribute('SLG_LeadID', SLG_LeadID);
+            p_mCallObj.setAttribute('EIC_Note', SLG_LeadID);
+            p_mCallObj.setAttribute('SLG_LeadType', SLG_LeadType);
+            p_mCallObj.setAttribute('SLG_StateSkill', SLG_StateSkill);
+
+            var iRes2 = confirm("Press OK when you are ready to conference in the 3rd party");
+            //conference in the third party
+            if (iRes2) {
+                //alert (IS_ATTR_Callid.value);
+                //scripter.callObject.id = IS_ATTR_Callid.value;
+                //create the conference object
+                //add 3rd party
+                p_ConferenceObject.Create(p_mCallObj);
+                //pick up the call, it is probably on hold
+                //scripter.callObject.pickup();
+                CallObjectEx.callObject.pickup();
+                //add scripter call
+                //p_ConferenceObject.add(scripter.callObject);
+                p_ConferenceObject.add(CallObjectEx.callObject);
+                //pickup 3rd party just in case
+                p_mCallObj.pickup();
+                var iRes3 = confirm("Press OK when you are ready to disconnect from this call");
+                if (iRes3) {
+                    //scripter.callObject.disconnect();
+                    DisconnectFromConference(p_ConferenceObject);
+                    //IS_ACTION_DISCONNECT.click();
+                    setScreenDisconnectedCall();
+                }
+            }
+            else {
+                //they did not want to transfer, so lets disconnect the 3rd party call and pick up the original call
+                //disconnect 3rd party call
+                p_mCallObj.disconnect();
+                //pick up original calls
+                scripter.callObject.id = CallObjectEx.callObject.id;
+                //CallObjectEx.callObject.pickup();
+                scripter.callObject.pickup();
+                infocallstate.innerText = "Call State: " + CallObjectEx.callObject.stateString;
+                infocallid.innerText = CallIdLabel + CallObjectEx.callObject.id;
+                setScreenConnectedCall();
+            }
+        }
+    }
+}
+
+window.onload = Init;
+//alert ('initialize');
+window.onload = Initialize; //functions.js
+//WaitCall();
+
+
+
+    </script>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="skn-masthead">
+            <span class="boxinline f12 mt6 ml10 fl tw">Encompass 360 Interface</span>
+            <span class="posr boxinline f12 mt6 mr10 fr tw">New American Funding</span>
+        </div>
+        <div id="header" class="mt20 ml20 mr20 f13 corners clearfix">
+            <div id="headerInner" class="boxinline fl pb10 pr10">
+                <button type="button" onclick="fncPickup()" class="btn-scripter" accesskey="P" name="btnPickup" value="Pickup">
+                    <img class="pr3" alt="Pickup" src="images/pickup.gif" />Pickup</button>
+                <button type="button" onclick="fncHold()" class="btn-scripter" accesskey="H" name="btnHold" value="Hold">
+                    <img class="pr3" alt="Hold" src="images/hold.gif" />Hold</button>
+                <button type="button" onclick="fncMute()" class="btn-scripter" accesskey="M" name="btnMute" value="Mute">
+                    <img class="pr3" alt="Mute" src="images/mute.gif" />Mute</button>
+                <button type="button" onclick="fncDisconnect()" class="btn-scripter" accesskey="D" name="btnDisconnect" value="Disconnect">
+                    <img class="pr3" alt="Disconnect" src="images/disconnect.gif" />Disconnect</button>
+                <button type="button" onclick="fncTransfer()" class="btn-scripter" accesskey="T" name="btnTransfer" value="Transfer">
+                    <img class="pr3" alt="Transfer" src="images/transfer.gif" name='imgTransfer' />Transfer to Sr Loan Officer</button>
+                <!--
+        <button onclick="fncRecord()" class="btn-scripter" accessKey="R" name="btnRecord" value="Record"><img class="pr3" alt="Record" src="/images/record.gif" name='imgRecord' />Record</button>
+        -->
+                <button type="button" id="buttonBreak" onclick="fncBreak()" class="btn-scripter posr top1" accesskey="B" name="btnBreak" value="Break">
+                    <img class="pr3" alt="Break" src="images/coffee.gif" name='imgBreak' />Break</button>
+                <!--
+		<button onclick="fncLogoff()" class="btn-scripter" accessKey="B" name="btnLogoff" value="Logoff"><img class="pr3" alt="LogOff" src="/images/ininlogosmall.gif" name='imgININ' />Logoff</button>
+        -->
+            </div>
+            <div class="boxinline fr pb10 pr10">
+                <span id="infowindow" class="headertext"></span>
+                <span id="infodate" class="headertext"><b>Date: </b>
+                    <script type="text/javascript" src="/Scripts/date.js"></script>
+                </span>
+                <br />
+                <b>User status:</b> <span id="infostatus" class="headertext">unknown</span><br />
+                <b>Status duration:</b> <span id="infostatusduration" class="headertext">00:00</span>
+                <p>Wait for Call 1.1</p>
+            </div>
+        </div>
+        <div id="infoscreen" class="mt20 ml20 mr20 f13">
+            <label id="infoagentid" class="infoline ml10">Agent:</label>
+            <label id="infocampaign" class="infoline">Call Type:</label>
+            <label id="infocallstate" class="infoline">Call State:</label>
+            <label id="infocallid" class="infoline">Call Id:</label>
+            <label id="infoleadid" class="infoline">LeadID:</label>
+        </div>
+        <div id="scrBreak" class="mt20 ml20 mr20 f13" style="display: none;">
+            <br />
+            <br />
+            <center>
+		<font size="7">On Break</font><br />
+		<br />
+		<span id="TimeField" style="font-family: Helvetica, Arial, Verdana; font-size:40px; font-weight: bold; text-align: center; width: 50%; border: 2px solid silver">&nbsp;</span><br />
+		<br />
+		<br />
+		<button type="image" style="width: 132; height: 35" onclick="WaitCall()" class="button2" accessKey=P name="btnAvailable" value="Available" style="width: 132; height: 35"><br />Go Available<br /></button>
+	</center>
+        </div>
+        <div class="mt20 ml20 mr20 f13 corners">
+            <asp:ScriptManager ID="ScriptManager1" runat="server" />
+            <asp:UpdatePanel ID="UpdatePanel1" runat="server" ChildrenAsTriggers="true" UpdateMode="Conditional">
+                <ContentTemplate>
+                    <div id="pnlInnerContent">
+                        <asp:Panel ID="pnlGetLeads" runat="server" CssClass="mt20 mb30" Visible="false">
+                            <p id="hdrTxt" runat="server" class="f17">Find a Lead</p>
+                            <br />
+                            <p id="subHdrTxt" runat="server" class="mb20">Lookup by ReferenceID, Phone Number, First or Last Name, Mailing or Property Address.</p>
+                            <asp:Label ID="lblStatus" runat="server" CssClass="box req mb20 f15 bold" Visible="false" />
+                            <asp:TextBox ID="tbSearch" runat="server" CssClass="txbx-gen w150" />
+                            <asp:Button ID="btnSearch" runat="server" CssClass="btn-gen ml5" Text="Search" OnClick="btnSearch_Click" />
+                            <asp:Label ID="lblSearchSummary" runat="server" Visible="false" /><br />
+                            <asp:GridView ID="gvGetLeads" runat="server"
+                                CssClass="DataGridTable"
+                                OnRowCreated="gvGetLeads_RowCreated"
+                                Width="100%"
+                                AllowPaging="true"
+                                AllowSorting="true"
+                                AutoGenerateColumns="false"
+                                OnPageIndexChanging="gvGetLeads_OnPageIndexChanging"
+                                OnSorting="gvGetLeads_OnSorting"
+                                Visible="false">
+                                <RowStyle CssClass="DataGridTableCell" />
+                                <AlternatingRowStyle CssClass="DataGridTableCellAlt" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Action">
+                                        <ItemTemplate>
+                                            <asp:LinkButton ID="lbGetLead" runat="server" Text="Get Lead" OnCommand="lbGetLead_Click" CommandArgument='<%# Eval("leadID") %>' />
+                                        </ItemTemplate>
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:TemplateField>
+                                    <asp:BoundField DataField="ReferenceID" HeaderText="ReferenceID">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="FirstName" HeaderText="First Name" SortExpression="FirstName">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="LastName" HeaderText="Last Name" SortExpression="LastName">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Mailing" HeaderText="Mailing Address">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Property" HeaderText="Property Address">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CampaignIDExt" HeaderText="Campaign" SortExpression="CampaignIDExt">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="DateCreated" HeaderText="Lead Created" SortExpression="DateCreated">
+                                        <HeaderStyle CssClass="data-grid-hdr tac" />
+                                        <ItemStyle CssClass="data-grid-spc tac" />
+                                    </asp:BoundField>
+                                </Columns>
+                                <PagerStyle CssClass="data-grid-pager" HorizontalAlign="Left" />
+                                <PagerSettings Mode="NumericFirstLast" PageButtonCount="15" />
+                            </asp:GridView>
+                        </asp:Panel>
+                        <asp:Panel ID="pnlPush" runat="server" CssClass="" Visible="false">
+                            <div class="boxinline pushContact">
+                                <asp:Label ID="lblLeadName" runat="server" CssClass="box" Visible="false" />
+                                <asp:Label ID="lblLeadPhone" runat="server" CssClass="box" Visible="false" />
+                                <asp:Label ID="lblLeadAddress" runat="server" CssClass="box" Visible="false" />
+                                <asp:Label ID="lblLeadCampaign" runat="server" CssClass="box" Visible="false" />
+                                <asp:Label ID="lblReferenceID" runat="server" CssClass="box" Visible="false" />
+                                <asp:Label ID="lblLeadID" runat="server" CssClass="box" Visible="false" />
+                                <asp:HiddenField ID="hfLeadID" runat="server" />
+                                <asp:HiddenField ID="hfStateSkill" runat="server" />
+                                <asp:HiddenField ID="hfLeadType" runat="server" />
+                            </div>
+                            <div class="boxinline ml20 valt mt30">
+                                <asp:Button ID="btnPush" runat="server" Text="Find Another Lead" OnClick="btnPush_Click" />
+                            </div>
+                        </asp:Panel>
+                    </div>
+                </ContentTemplate>
+                <Triggers>
+                    <asp:AsyncPostBackTrigger ControlID="btnSearch" />
+                </Triggers>
+            </asp:UpdatePanel>
+        </div>
+
+        <div class="mt20 ml20 mr20 f13 corners clearfix">
+
+            <table class="generalTable" id="searchLead">
+                <tr class="form-title">
+                    <th colspan="3">
+                        <h1>Look up Lead</h1>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Street</label>
+                        <input type="text" name="AddressLine1" tabindex="1" id="AddressLine1" />
+                    </td>
+                    <td>
+                        <label>Zip</label>
+                        <input type="text" name="AddressZip" tabindex="2" id="AddressZip" />
+                    </td>
+                    <td rowspan="5" class="searchAction">
+                        <button type="button" class="search-button btn btn-primary" tabindex="11" onclick="initSearch()">Search</button>
+                        <button type="button" class="btn btn-basic" onclick="form.reset();">Clear All Fields</button>
+                        <button type="button" onclick="addNewProspectDisplay()">Add Manual Lead</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>City</label>
+                        <input type="text" name="AddressCity" tabindex="3" id="AddressCity" />
+                    </td>
+                    <td>
+                        <label>State</label>
+                        <select tabindex="4" name="AddressState" id="AddressState">
+                            <option value="" selected="selected">State</option>
+                            <option value="AL">Alabama</option>
+                            <option value="AK">Alaska</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="AR">Arkansas</option>
+                            <option value="CA">California</option>
+                            <option value="CO">Colorado</option>
+                            <option value="CT">Connecticut</option>
+                            <option value="DE">Delaware</option>
+                            <option value="DC">District Of Columbia</option>
+                            <option value="FL">Florida</option>
+                            <option value="GA">Georgia</option>
+                            <option value="HI">Hawaii</option>
+                            <option value="ID">Idaho</option>
+                            <option value="IL">Illinois</option>
+                            <option value="IN">Indiana</option>
+                            <option value="IA">Iowa</option>
+                            <option value="KS">Kansas</option>
+                            <option value="KY">Kentucky</option>
+                            <option value="LA">Louisiana</option>
+                            <option value="ME">Maine</option>
+                            <option value="MD">Maryland</option>
+                            <option value="MA">Massachusetts</option>
+                            <option value="MI">Michigan</option>
+                            <option value="MN">Minnesota</option>
+                            <option value="MS">Mississippi</option>
+                            <option value="MO">Missouri</option>
+                            <option value="MT">Montana</option>
+                            <option value="NE">Nebraska</option>
+                            <option value="NV">Nevada</option>
+                            <option value="NH">New Hampshire</option>
+                            <option value="NJ">New Jersey</option>
+                            <option value="NM">New Mexico</option>
+                            <option value="NY">New York</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="ND">North Dakota</option>
+                            <option value="OH">Ohio</option>
+                            <option value="OK">Oklahoma</option>
+                            <option value="OR">Oregon</option>
+                            <option value="PA">Pennsylvania</option>
+                            <option value="RI">Rhode Island</option>
+                            <option value="SC">South Carolina</option>
+                            <option value="SD">South Dakota</option>
+                            <option value="TN">Tennessee</option>
+                            <option value="TX">Texas</option>
+                            <option value="UT">Utah</option>
+                            <option value="VT">Vermont</option>
+                            <option value="VA">Virginia</option>
+                            <option value="WA">Washington</option>
+                            <option value="WV">West Virginia</option>
+                            <option value="WI">Wisconsin</option>
+                            <option value="WY">Wyoming</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>First Name</label>
+                        <input type="text" name="NameFirst" tabindex="5" id="NameFirst" value="Matt" />
+                    </td>
+                    <td>
+                        <label>Last Name</label>
+                        <input type="text" name="NameLast" tabindex="6" id="NameLast" value="Zamora" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Phone</label>
+                        <input type="text" name="PhonNumber" tabindex="7" id="PhoneNumber" />
+                    </td>
+                    <td>
+                        <label>Domain</label>
+                        <select tabindex="8" name="DomainID" id="DomainID">
+                            <option selected="selected">68</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label></label>
+                        <input type="checkbox" name="Queue" tabindex="9" />
+                        <label>Interaction Queue</label>
+                    </td>
+                    <td>
+                        <label>Ref ID</label>
+                        <input type="text" name="RefID" tabindex="10" />
+                    </td>
+                </tr>
+            </table>
+
+            <div class="results" id="searchResults">
+            </div>
+
+        </div>
+
+        <div class="modal-overlay" id="newProspect">
+            <div class="modal-container">
+                <div class="modal-header clearfix">
+                    <h2>New Prospect</h2>
+                    <a href="#" class="closeModal" onclick="addNewProspectHide()">Close [X] </a>
+                </div>
+                <div class="modal-body clearfix">
+
+                    <table class="tblContainer">
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th>Name
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>First</label>
+                                            <input type="text" id="firstName" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Middle</label>
+                                            <input type="text" id="middleName" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Last</label>
+                                            <input type="text" id="lastName" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Address</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Address</label>
+                                            <input type="text" id="newLeadAddressLine1" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>City</label>
+                                            <input type="text" id="newLeadAddressCity" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>State</label>
+                                            <select tabindex="4" name="newLeadState" id="newLeadState">
+                                                <option value="" selected="selected">State</option>
+                                                <option value="AL">Alabama</option>
+                                                <option value="AK">Alaska</option>
+                                                <option value="AZ">Arizona</option>
+                                                <option value="AR">Arkansas</option>
+                                                <option value="CA">California</option>
+                                                <option value="CO">Colorado</option>
+                                                <option value="CT">Connecticut</option>
+                                                <option value="DE">Delaware</option>
+                                                <option value="DC">District Of Columbia</option>
+                                                <option value="FL">Florida</option>
+                                                <option value="GA">Georgia</option>
+                                                <option value="HI">Hawaii</option>
+                                                <option value="ID">Idaho</option>
+                                                <option value="IL">Illinois</option>
+                                                <option value="IN">Indiana</option>
+                                                <option value="IA">Iowa</option>
+                                                <option value="KS">Kansas</option>
+                                                <option value="KY">Kentucky</option>
+                                                <option value="LA">Louisiana</option>
+                                                <option value="ME">Maine</option>
+                                                <option value="MD">Maryland</option>
+                                                <option value="MA">Massachusetts</option>
+                                                <option value="MI">Michigan</option>
+                                                <option value="MN">Minnesota</option>
+                                                <option value="MS">Mississippi</option>
+                                                <option value="MO">Missouri</option>
+                                                <option value="MT">Montana</option>
+                                                <option value="NE">Nebraska</option>
+                                                <option value="NV">Nevada</option>
+                                                <option value="NH">New Hampshire</option>
+                                                <option value="NJ">New Jersey</option>
+                                                <option value="NM">New Mexico</option>
+                                                <option value="NY">New York</option>
+                                                <option value="NC">North Carolina</option>
+                                                <option value="ND">North Dakota</option>
+                                                <option value="OH">Ohio</option>
+                                                <option value="OK">Oklahoma</option>
+                                                <option value="OR">Oregon</option>
+                                                <option value="PA">Pennsylvania</option>
+                                                <option value="RI">Rhode Island</option>
+                                                <option value="SC">South Carolina</option>
+                                                <option value="SD">South Dakota</option>
+                                                <option value="TN">Tennessee</option>
+                                                <option value="TX">Texas</option>
+                                                <option value="UT">Utah</option>
+                                                <option value="VT">Vermont</option>
+                                                <option value="VA">Virginia</option>
+                                                <option value="WA">Washington</option>
+                                                <option value="WV">West Virginia</option>
+                                                <option value="WI">Wisconsin</option>
+                                                <option value="WY">Wyoming</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <label>Zip</label>
+                                            <input type="text" style="width: 60px;" id="newLeadAddressZip" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th>Phone</th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Home Phone</label>
+                                            <input type="text" id="PhoneHome" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Work Phone</label>
+                                            <input type="text" id="PhoneWork" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label>Cell Phone</label>
+                                            <input type="text" id="PhoneCell" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Source Code</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label></label>
+                                            <input type="checkbox" />
+                                            <span class="right-label" style="width: 200px;">Is Purchase Loan?</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Radio</label>
+                                            <select>
+                                                <option>Select a Station</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Orig Source</label>
+                                            <span id="origSource">None</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Email</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Primary</label>
+                                            <input type="text" id="primaryEmail" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Alternate</label>
+                                            <input type="text" id="alternateEmail" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="generalTable">
+                                    <tr>
+                                        <th colspan="2">Language</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label>Language</label>
+                                            <select>
+                                                <option>Select a Language</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label></label>
+                                            <input type="checkbox" />
+                                            <span class="right-label">Test Lead </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table style="background: #eee;">
+                                    <tr>
+                                        <td>
+                                            <label>Note</label>
+                                            <input type="text" />
+                                            <button type="button">Button 1</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <textarea style="width: 100%;"></textarea>
+                                        </td>
+                                    </tr>
+                                    <%-- <tr>
+                                <td>
+                                    <input type="radio" /> <span class="right-label">Send to Branch</span>
+                                    <select>
+                                        <option>Select an Option</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" /> <span class="right-label">Send to Agent </span>
+                                    <select>
+                                        <option>Select an Option</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" /> <span class="right-label">Send to Queue </span>
+                                    <select>
+                                        <option>Select an Option</option>
+                                    </select>
+                                </td>
+                            </tr>--%>
+                                    <tr>
+                                        <td class="modal-action-buttons">
+                                            <button type="button" style="width: 100%" class="">Web Service IM</button>
+                                            <button type="button">Add to Do Not Call List</button>
+                                            <button type="button">Add to Do Not Mail List</button>
+                                            <button type="button" class="send-im-button">Send IM</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+
+                                <%-- <div class="log-time-container">
+                            <table class="log-time">
+                                <tr>
+                                    <td>Hold Time <span class="hold-time">00:00</span></td>
+                                    <td>IM Remaining <span class="im-remaining">00:00</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="logs">
+                            
+                            <table class="log-record">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Name
+                                        </th>
+                                        <th>
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            Call Name
+                                        </td>
+                                        <td>
+                                            Status
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>--%>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+
+    </form>
+    <script>
+
+        var param = {};
+
+        // Initiate Search on Click
+        function initSearch() {
+            // Capture Form Field Values
+            param.NameFirstVal = document.getElementById("NameFirst").value;
+            param.NameLastVal = document.getElementById("NameLast").value;
+            param.AddressLine1Val = document.getElementById("AddressLine1").value;
+            param.AddressCityVal = document.getElementById("AddressCity").value;
+            param.AddressStateVal = document.getElementById("AddressState").value;
+            param.AddressZipVal = document.getElementById("AddressZip").value;
+            param.PhoneNumberVal = document.getElementById("PhoneNumber").value;
+
+            // Create Loading Message
+            document.getElementById("searchResults").innerHTML =
+                '<div id="search-load">' +
+                '<img src="images/loading.gif" style="width:30px; height:30px;" />' +
+                '<strong>Fetching your search results</strong>' +
+                '</div>'
+
+            // Run Search
+            runSearch()
+        }
+
+
+
+
+        // Run Search Functions
+        function runSearch() {
+
+            var url = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/LookupLead";
+
+            // Send Data
+            var formData = {
+                "ObjectID": null,
+                "NameFirst": param.NameFirstVal,
+                "NameLast": param.NameLastVal,
+                "AddressLine1": param.AddressLine1Val,
+                "AddressCity": param.AddressCityVal,
+                "AddressState": param.AddressStateVal,
+                "AddressZip": param.AddressZipVal,
+                "PhoneNumber": param.PhoneNumberVal,
+                "DomainID": 68,
+                "LookupLeadSource": 1
+            };
+
+            // AJAXY STUFF
+            xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify(formData));
+
+            xhr.onreadystatechange = function () {
+                var DONE = 4; // readyState 4 means the request is done.
+                var OK = 200; // status 200 is a successful return.
+
+                if (xhr.readyState === DONE) {
+                    if (xhr.status === OK)
+
+                        console.log(this.responseText) // 'This is the returned text.'
+                    var data = JSON.parse(this.responseText);
+
+                    if (data.leads && data.leads.length > 0) {
+                        // Draw Table Header    
+                        var tableHeader = "<h1 class='search-results-title'>Search Results</h1>" +
+                            "<table class='generalTable'>" +
+                            "<tr><th>Owner Name</th>" +
+                            "<th>Owner Type</th>" +
+                            "<th>First Name</th>" +
+                            "<th>Last Name</th>" +
+                            "<th>Address</th>" +
+                            "<th>City</th>" +
+                            "<th>State</th>" +
+                            "<th>Zip</th>" +
+                            "<th>Type</th>" +
+                            "<th>Source</th>" +
+                            "<th>Main Phone</th>" +
+                            "<th>ID</th></tr>"
+                        var tableContent = "";
+
+                        // Loop through data and Draw Table Data
+                        for (i = 0; i < data.leads.length; i++) {
+                            tableContent = tableContent +
+                                "<tr  ondblclick=addNewProspectDisplay('" + data.leads[i].Result_ID + "');><td>" + data.leads[i].OwnerName +
+                                "</td><td>" + data.leads[i].Owner_Type +
+                                "</td><td>" + data.leads[i].First_Name +
+                                "</td><td>" + data.leads[i].Last_Name +
+                                "</td><td>" + data.leads[i].Line1 +
+                                "</td><td>" + data.leads[i].City +
+                                "</td><td>" + data.leads[i].Region +
+                                "</td><td>" + data.leads[i].Postal_Code +
+                                "</td><td>" + data.leads[i].Type +
+                                "</td><td>" + data.leads[i].Source +
+                                "</td><td>" + data.leads[i].Main_Phone +
+                                "</td><td>" + data.leads[i].Result_ID +
+                                "</td></tr>";
+                        }
+
+                        // Draw end Table
+                        var tableFooter = "</table>";
+
+                        // Assemble Table
+                        document.getElementById("searchResults").innerHTML = tableHeader + tableContent + tableFooter;
+
+                    } else {
+
+                        // If No Results - Show Message
+                        document.getElementById("searchResults").innerHTML =
+                        '<div id="search-load">' +
+                        '<strong>Your Query did not match any results</strong>' +
+                        '</div>'
+
+                    }
+                } else {
+                    console.log('Error: ' + xhr.status); // An error occurred during the request.
+
+                    document.getElementById("searchResults").innerHTML =
+                        '<div id="search-load">' +
+                            '<strong>Error' + xhr.status + '</strong>' +
+                        '</div>'
+
+                }
+            };
+        }
+
+        // Display Modal for New Prospect
+        function addNewProspectDisplay(objectID) {
+
+            if (objectID != null) {
+                //get the data for the exsiting lead
+                GetProspectData(objectID);
+            }
+            else {
+                alert('new');
+            }
+
+            document.getElementById("newProspect").style.display = "block";
+        }
+
+        function addNewProspectHide() {
+            document.getElementById("newProspect").style.display = "none";
+        }
+
+
+        function GetProspectData(objectID) {
+            var url = "http://qa.thebrokernetwork.com/bankerviewservices/v1/ClientService/GetLeadDataV2?LeadID=" + objectID + "&LeadSource=1";
+
+            // AJAXY STUFF
+            xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                var DONE = 4; // readyState 4 means the request is done.
+                var OK = 200; // status 200 is a successful return.
+
+                if (xhr.readyState === DONE) {
+                    if (xhr.status === OK)
+
+                        console.log(this.responseText) // 'This is the returned text.'
+                    var data = JSON.parse(this.responseText);
+                    if (data) {
+                        document.getElementById("firstName").value = data.NameFirst;
+                        document.getElementById("middleName").value = data.NameMiddle;
+                        document.getElementById("lastName").value = data.NameLast;
+
+                        document.getElementById("newLeadAddressLine1").value = data.AddressLine1;
+                        document.getElementById("newLeadAddressCity").value = data.AddressCity;
+                        document.getElementById("newLeadState").value = data.AddressState;
+                        document.getElementById("newLeadAddressZip").value = data.AddressZip;
+
+                        document.getElementById("PhoneHome").value = data.PhoneHome;
+                        document.getElementById("PhoneWork").value = data.PhoneWork;
+                        document.getElementById("PhoneCell").value = data.PhoneCell;
+
+                        document.getElementById("primaryEmail").value = data.EMail;
+                        document.getElementById("alternateEmail").value = data.EMailAlt;
+
+
+
+                    } else {
+
+                        // If No Results - Show Message
+                        document.getElementById("searchResults").innerHTML =
+                        '<div id="search-load">' +
+                        '<strong>Your Query did not match any results</strong>' +
+                        '</div>'
+
+                    }
+                } else {
+                    console.log('Error: ' + xhr.status); // An error occurred during the request.
+
+                    document.getElementById("searchResults").innerHTML =
+                        '<div id="search-load">' +
+                            '<strong>Error' + xhr.status + '</strong>' +
+                        '</div>'
+
+                }
+            };
+            xhr.send();
+
+        }
+
+    </script>
+
+</body>
+</html>

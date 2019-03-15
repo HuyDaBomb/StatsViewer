@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<!--
+	The goal of this web page is to show an example html page which will get queue statistics and change the font and text for supervisor alerts
+-->
+
+<head>
+    <title>Statistics4x1 login</title>
+    <script type="application/javascript" src="common.js"></script>
+    <script type="application/javascript" src="statistics.js"></script>
+    <script type="application/javascript" src="alerts.js"></script>
+    <!-- We'll use bootstrap here, because the rest of the internet does too -->
+    <!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet"/> -->
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+
+    <link href="login.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+
+    <style>
+        .wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            /* grid-template-columns: repeat(3, 1fr 2fr 1fr); */
+            grid-gap: 1em;
+            /* grid-column-gap: 1em; */
+            /* grid-column-gap: 1em; */
+            /* grid-auto-rows: minmax(100px, auto); */
+            /* justify-items: start; */
+            /* align-items: flex-start; */
+        }
+
+        .box1 {
+            /* grid-column: 1/3; */
+            align-self: flex-start;
+        }
+
+        .workgroupStats {
+            align-self: stretch;
+            justify-self: stretch;
+            grid-column: 1/2;
+            grid-row: 2;
+            border: 1px #333 solid;
+        }
+
+        .queueStats {
+            align-self: stretch;
+            justify-self: stretch;
+            grid-column: 1/2;
+            grid-row: 3;
+            border: 1px #333 solid;
+        }
+
+        table.table {
+            /* border-collapse: collapse; */
+            border: 1px solid red;
+
+        }
+
+        table.table tr:nth-child(even) {
+            background-color: azure;
+        }
+
+
+        table td {
+            border: 1px white solid;
+            padding: 1px;
+        }
+
+        table td label {
+            /* background-color: blueviolet; */
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 1em;
+        }
+
+        .wrapper>div {
+            background: rgb(163, 235, 235);
+            padding: 1em;
+        }
+
+        .wrapper>div:nth-child(odd) {
+            background: rgb(220, 235, 167);
+
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            /* margin-top: 3rem; */
+        }
+
+        .section {
+            padding: 8rem 0 7rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .section-heading,
+        .section-description {
+            margin-bottom: 1.2rem;
+        }
+
+        .section-a {
+            background-image: url('images/section-bg.jpg');
+            background-size: cover;
+            color: #fff;
+            padding-bottom: 5rem;
+        }
+
+        .section-a .fa {
+            font-size: 40px;
+            margin-bottom: .5rem;
+            color: #beebff;
+        }
+    </style>
+
+
+</head>
+
+
+<body>
+
+    <div id="login">
+
+        <p id="open">LOGIN HERE</p>
+
+        <form id="connection-form">
+            <fieldset>
+                <!-- <legend>Connection Credentials</legend> -->
+                <div>
+                    <label for="server">Server:</label>
+                    <input class="u-full-width" placeholder="Server or IP address" type="text" name="server" id="servername" value="" required autofocus
+                    />
+                </div>
+                <div>
+                    <label for="username">Username:</label>
+                    <input class="u-full-width" placeholder="user ID" type="text" name="username" id="username">
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input class="u-full-width" type="password" name="password" id="password">
+                </div>
+                <p>
+                    <label>
+                        <input type="checkbox" name="remember" checked="true" />Remember Me</label>
+
+                    <input class="u-full-width button-primary" type="submit" name="button" id="btnConnect" value="Connect">
+
+                </p>
+
+
+
+            </fieldset>
+        </form>
+    </div>
+
+
+
+
+
+    <div class="wrapper">
+        <div class="box1">
+            <!-- <button id="btn_getStats" class="button-primary">Get Stats</button> -->
+            <a href="#" class="button button-primary" id="btn_getStats">
+                <i class="fa fa-download"></i>
+                Get Stats
+            </a>
+        </div>
+        <div class="workgroupStats">
+            <h5>
+                Workgroup Stats:</h5>
+            <select class="u-full-width" id='workgroupSelect' onchange="selectChanged();">
+                <option>--None--</option>
+            </select>
+
+
+            <table class="u-full-width table table-condensed table-hover">
+                <!-- <thead>
+                    <tr>
+                        <th>
+                            Agent Stats
+                        </th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead> -->
+                <tbody>
+                    <tr>
+                        <td>
+                            Agents Logged In
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AgentsLoggedInAndActivated"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Not Available
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:NotAvailable"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Available for ACD Interactions
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:NumberAvailableForACDInteractions"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Percent Available
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:PercentAvailable"></label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="queueStats">
+            <h5>Queue Interval Stats:</h5>
+
+            <select class="u-full-width" id='intervalSelect' onchange="selectChanged();">
+
+            </select>
+
+
+            <table class="u-full-width table table-condensed table-hover">
+                <!-- <thead>
+                    <tr>
+                        <th>
+                            Queue Stats
+                        </th>
+                        <th></th>
+                        
+                    </tr>
+                </thead> -->
+                <tbody>
+                    <tr>
+                        <td>
+                            Average Hold Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageHoldTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Average Talk Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageTalkTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Average Wait Time
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:AverageWaitTime"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Abandoned
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsAbandoned"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Answered
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsAnswered"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Completed
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsCompleted"></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Connected
+                        </td>
+                        <td>
+                            <label id="inin.workgroup:InteractionsConnected"></label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Perspiciatis, at minima non laudantium provident fugit veritatis
+            error consequuntur enim doloremque magni laborum ratione esse ullam doloribus sequi iusto explicabo sint?</div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia eaque consectetur impedit inventore illo. Illo quod
+            sint vero, culpa enim distinctio, eius, a maiores explicabo cumque aperiam quaerat doloremque mollitia?</div>
+        <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia eaque consectetur impedit inventore illo. Illo quod
+            sint vero, culpa enim distinctio, eius, a maiores explicabo cumque aperiam quaerat doloremque mollitia?</div>
+        <div>Aliquip laboris id dolor eu id dolore tempor ea tempor adipisicing mollit. Pariatur id dolor anim culpa incididunt
+            cupidatat cupidatat ex reprehenderit ipsum sunt quis laboris. Anim laboris aute proident id duis consequat ullamco
+            mollit quis irure quis. Aliqua consectetur aute aliquip dolor tempor eu pariatur. Tempor voluptate voluptate
+            excepteur sint consequat commodo voluptate cupidatat cupidatat et ad.</div>
+        <!--container-->
+    </div>
+    <section class="section section-a">
+        <div class="container">
+            <div class="row">
+                <div class="one-third column">
+                    <i class="fa fa-calendar"></i>
+                    <h5>Plan Your Life</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+                <div class="one-third column">
+                    <i class="fa fa-cloud"></i>
+                    <h5>Upload To The Cloud</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+                <div class="one-third column">
+                    <i class="fa fa-users"></i>
+                    <h5>Manage Users</h5>
+                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sapiente, autem?</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- <script>
+        window.onload = function () {
+            var btn1 = document.getElementById('btn_getStats');
+            //btn1.addEventListener('click', onLoad);
+
+            onLoad();
+        };
+
+    </script> -->
+    <script>
+        $(document).ready(function () {
+            console.log('Page is ready and loaded!');
+            // var userId = "hphan";
+            // var password = "1212";
+            // var server = "http://i3remote.avantpoint.com:8018/icws/";
+            console.log (server);
+            console.log (userId);
+            console.log (password);
+            var connectionForm = document.getElementById('connection-form');
+            connectionForm.servername.value = server;
+            connectionForm.username.value = userId;
+            connectionForm.password.value = password;
+
+            //bind click event to open DIV id
+            $('#open').click(function (evt) {
+                //prevent default click links from executing    
+                evt.preventDefault();
+                //check to see if closed, if so open
+                if ($('#login form').is(':hidden')) {
+                    $('#login form').fadeIn(300);
+                    $(this).addClass('close');
+                    //update open DIV with disconnected
+                    $('#open').text("Disconnected");
+                } //end if
+                else {
+                    $('#login form').slideUp(600);
+                    $(this).removeClass('close');
+                    //update open DIV with connected status
+                    $('#open').text("Connected");
+                } //end else
+            }); // end click
+
+            var btn1 = document.getElementById('btn_getStats');
+            btn1.addEventListener('click', onLoad);
+
+            var btnConnect1 = document.getElementById('btnConnect');
+            btnConnect1.addEventListener('click', function (evt) {
+                //evt.preventDefault();
+                console.log('clicked');
+                userId = document.getElementById('username');
+                password = document.getElementById('password');
+
+                Init();
+            });
+
+        }); //end doc ready on load
+
+
+        function loginForm() {
+            loginData = {
+                "__type": "urn:inin.com:connection:icAuthConnectionRequestSettings",
+                "applicationName": APPNAME,
+                "userID": userId,
+                "password": password
+            };
+
+            sendRequest("POST", "connection", loginData, afterLogin);
+        }
+
+        function Init() {
+            var url = 'http://ideajam.net/ideajam/p/ij.nsf/jsonGetRecentComments';
+
+            $.ajax({
+                url: url,
+                type: 'GET', //default GET (Other values: POST)
+                dataType: 'json', //(Other values: xml, json, script, or html)
+                //data: {'param1': 'value1'}
+            }) //end ajax init
+                .done(function (data) {
+                    console.log(data);
+                    // $('body').html(data.result[0].comment);
+                    $('.wrapper').append('<div><ol id="huy">');
+                    for (var i = 0; i < data.result.length; i++) {
+                        //$('#huy').append('<div>' + data.result[i].createdby + ' - ' + data.result[i].comment + '</div>');
+                        $('.wrapper').append('<div>' + data.result[i].createdby + ' - ' + data.result[i].comment + '</div>');
+                    }
+                    $('.wrapper').append('</div>');
+
+
+                }) //end done
+                .fail(function () {
+                    console.log("error");
+                }) //end fail
+
+                .always(function () {
+                    console.log("completed");
+                });//end always
+
+        };//end Init
+    </script>
+</body>

@@ -1,0 +1,91 @@
+#login {
+    width: 200px;
+    position: absolute;
+    right: 10px;
+    /* left: 1px; */
+    top: 1px;
+    z-index: 100;
+    background-color: rgb(77, 88, 121);
+    border-radius: 10px 10px 10px 10px;
+}
+
+#login a {
+    text-decoration: none;
+}
+
+#open {
+    margin: 0;
+    cursor: pointer;
+    background-image: url(images/open.png);
+    background-repeat: no-repeat;
+    background-position: 8px 7px;
+    color: white;
+    padding: 5px 0 5px 30px;
+    border-radius: 10px 10px 10px 10px;
+    background-color: green;
+    
+}
+
+#login .close {
+    background-image: url(images/close.png);
+    background-color: red;
+    
+}
+
+ #open:hover {
+    color: rgb(0, 0, 0);
+    background-color: rgb(200, 200, 200);
+}
+
+
+#login form {
+    padding: 10px 10px 10px 10px;
+    display: none;
+    
+}
+
+#login label {
+    font-size: .75em;
+    color: white;
+    font-weight: bold;
+    
+    text-align: left;
+    margin: 0 15px 0 0;
+    display: inline-block;
+}
+
+/* #login input[type="text"] {
+    font-size: 14px;
+    width: 140px;
+}
+#login input[type="password"] {
+    font-size: 14px;
+    width: 140px;
+}
+#login .button {
+    text-align: right;
+    padding-right: 10px;
+}
+
+#login legend {
+    font-size: .75em;
+    color: white;
+    font-weight: bold;
+    
+    text-align: left;
+    margin: 0 0px 0 0;
+    display: inline-block;
+} */
+
+/* body {
+    font-family: "Segoe UI","Helvetica Neue",Helvetica,"Droid Sans",Arial,sans-serif;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+   */

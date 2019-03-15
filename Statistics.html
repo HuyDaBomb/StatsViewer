@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--
+	The goal of this web page is to show an example html page which will get queue statistics and change the font and text for supervisor alerts
+-->
+<head>
+	<title>Statistics</title>
+	<script type="application/javascript" src="common.js"></script>
+	<script type="application/javascript" src="statistics.js"></script>
+	<script type="application/javascript" src="alerts.js"></script>
+	<!-- We'll use bootstrap here, because the rest of the internet does too -->
+	
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet"/>
+	
+	<style>
+		label{
+			margin-left: 15px;
+			min-width: 35px;
+			padding-left: 5px;
+			border-radius:5px;
+		}
+		
+		body{
+			margin:10px;
+		}
+	</style>
+</head>
+<body onload="onLoad();">
+	Workgroup: <select id='workgroupSelect' onchange="selectChanged();">
+		<option>--None--</option>
+	</select>
+	
+	<h3>Agent Stats</h3>
+	<table class="table table-condensed table-hover">
+		<tr>
+			<td>
+				Agents Logged In
+			</td>
+			<td>
+				<label id="inin.workgroup:AgentsLoggedInAndActivated"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Not Available
+			</td>
+			<td>
+				<label id="inin.workgroup:NotAvailable"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Available for ACD Interactions
+			</td>
+			<td>
+				<label id="inin.workgroup:NumberAvailableForACDInteractions"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Percent Available
+			</td>
+			<td>
+				<label id="inin.workgroup:PercentAvailable"></label>
+			</td>
+		</tr>
+	</table>
+	
+	<h3>Queue Stats</h3>
+	<select id='intervalSelect'  onchange="selectChanged();">
+		
+	</select>
+	<table  class="table table-condensed table-hover">
+		<tr>
+			<td>
+				Average Hold Time
+			</td>
+			<td>
+				<label id="inin.workgroup:AverageHoldTime"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Average Talk Time
+			</td>
+			<td>
+				<label id="inin.workgroup:AverageTalkTime"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Average Wait Time
+			</td>
+			<td>
+				<label id="inin.workgroup:AverageWaitTime"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Abandoned
+			</td>
+			<td>
+				<label id="inin.workgroup:InteractionsAbandoned"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Answered
+			</td>
+			<td>
+				<label id="inin.workgroup:InteractionsAnswered"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Completed
+			</td>
+			<td>
+				<label id="inin.workgroup:InteractionsCompleted"></label>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Connected
+			</td>
+			<td>
+				<label id="inin.workgroup:InteractionsConnected"></label>
+			</td>
+		</tr>
+		
+	</table>
+</body>
